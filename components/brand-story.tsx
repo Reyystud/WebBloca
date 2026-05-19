@@ -2,6 +2,15 @@
 
 import { useEffect, useRef, useState } from 'react'
 
+const LIFESTYLE_IMAGES = [
+  '/Model/BalletBagCharm.jpeg',
+  '/Model/IvyBracelet.jpeg',
+  '/Model/PiyoSparkleBracelet.jpeg',
+  '/Model/PunzelBracelet.jpeg',
+  '/Model/solitaresparklerings.jpeg',
+  '/Model/IllumaBracelet.jpeg',
+]
+
 export default function BrandStory() {
   const marqueeRef = useRef<HTMLDivElement>(null)
   const [isPlaying, setIsPlaying] = useState(true)
@@ -10,66 +19,68 @@ export default function BrandStory() {
     <section id="story" className="section-padding bg-white">
       <div className="max-w-7xl mx-auto">
         {/* Marquee Text */}
-        <div className="mb-16 overflow-hidden bg-black text-white py-6 px-6 rounded-lg">
+        <div className="mb-24 overflow-hidden bg-black text-white py-8 px-6">
           <div
             ref={marqueeRef}
-            className="flex gap-8 animate-scroll whitespace-nowrap"
-            onMouseEnter={() => setIsPlaying(false)}
-            onMouseLeave={() => setIsPlaying(true)}
+            className="flex gap-12 animate-scroll whitespace-nowrap"
           >
-            {[...Array(4)].map((_, i) => (
-              <span key={i} className="text-lg sm:text-xl font-semibold">
-                Handmade in Indonesia • Premium Materials • Sustainable Practices • Artisan Crafted
+            {[...Array(6)].map((_, i) => (
+              <span key={i} className="text-xs font-bold tracking-[0.4em] uppercase">
+                Handmade in Indonesia • Premium Materials • Sustainable Practices • Artisan Crafted • Limited Edition
               </span>
             ))}
           </div>
         </div>
 
         {/* Story Content */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-16 mb-24 items-center">
           <div>
-            <h2 className="text-4xl sm:text-5xl font-bold mb-6">Our Story</h2>
-            <p className="text-lg text-gray-600 leading-relaxed mb-4">
-              BLOCA was born from a passion for craftsmanship and sustainable design. Each bracelet is handmade by skilled artisans in Indonesia, using only the finest materials.
+            <h2 className="text-xs font-bold tracking-[0.3em] uppercase text-gray-400 mb-6">Our Philosophy</h2>
+            <h3 className="text-4xl sm:text-6xl font-black mb-8 tracking-tighter">Artisanship Redefined</h3>
+            <p className="text-lg text-gray-500 leading-relaxed mb-6 font-light">
+              BLOCA was born from a passion for craftsmanship and sustainable design. Each piece is meticulously handmade by skilled artisans in Indonesia, using only the finest sourced materials.
             </p>
-            <p className="text-lg text-gray-600 leading-relaxed">
+            <p className="text-lg text-gray-500 leading-relaxed font-light">
               We believe in creating pieces that last, that tell stories, and that make a positive impact on communities and the environment.
             </p>
           </div>
 
           {/* Stats */}
-          <div className="grid grid-cols-3 gap-6">
-            <div>
-              <p className="text-4xl font-bold mb-2">50K+</p>
-              <p className="text-sm text-gray-600">Happy Customers</p>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-12">
+            <div className="border-l border-gray-100 pl-6">
+              <p className="text-5xl font-black mb-2 tracking-tighter">50K+</p>
+              <p className="text-xs font-bold tracking-widest uppercase text-gray-400">Patrons</p>
             </div>
-            <div>
-              <p className="text-4xl font-bold mb-2">100%</p>
-              <p className="text-sm text-gray-600">Handmade</p>
+            <div className="border-l border-gray-100 pl-6">
+              <p className="text-5xl font-black mb-2 tracking-tighter">100%</p>
+              <p className="text-xs font-bold tracking-widest uppercase text-gray-400">Artesanal</p>
             </div>
-            <div>
-              <p className="text-4xl font-bold mb-2">12+</p>
-              <p className="text-sm text-gray-600">Years Crafting</p>
+            <div className="border-l border-gray-100 pl-6">
+              <p className="text-5xl font-black mb-2 tracking-tighter">12+</p>
+              <p className="text-xs font-bold tracking-widest uppercase text-gray-400">Years</p>
             </div>
           </div>
         </div>
 
         {/* Masonry Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
-          {[1, 2, 3, 4, 5, 6].map((i) => (
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-8">
+          {LIFESTYLE_IMAGES.map((src, i) => (
             <div
               key={i}
-              className={`bg-gray-100 rounded-lg overflow-hidden ${
-                i === 1 || i === 6 ? 'md:row-span-2' : ''
+              className={`relative bg-gray-50 overflow-hidden group ${
+                i === 0 || i === 5 ? 'md:row-span-2' : ''
               }`}
               style={{
-                aspectRatio: i === 1 || i === 6 ? 'auto' : '1',
-                minHeight: i === 1 || i === 6 ? '400px' : '250px',
+                aspectRatio: i === 0 || i === 5 ? 'auto' : '1',
+                minHeight: i === 0 || i === 5 ? '500px' : '300px',
               }}
             >
-              <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
-                <p className="text-gray-400 text-sm">Lifestyle Image {i}</p>
-              </div>
+              <img 
+                src={src} 
+                alt={`Lifestyle ${i}`} 
+                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+              />
+              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-500" />
             </div>
           ))}
         </div>
@@ -77,20 +88,11 @@ export default function BrandStory() {
 
       <style jsx>{`
         @keyframes scroll {
-          0% {
-            transform: translateX(0);
-          }
-          100% {
-            transform: translateX(-50%);
-          }
+          0% { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
         }
-
         .animate-scroll {
-          animation: scroll 20s linear infinite;
-        }
-
-        .animate-scroll:hover {
-          animation-play-state: paused;
+          animation: scroll 30s linear infinite;
         }
       `}</style>
     </section>
