@@ -1,7 +1,5 @@
 # BLOCA - Handcrafted Jewelry E-Commerce
 
-A full-stack e-commerce platform for BLOCA, a handcrafted jewelry brand from Indonesia. Built with Next.js 16, Supabase Auth, Prisma, PostgreSQL, and Tailwind CSS.
-
 ## Features
 
 - **Product Catalog** — Browse products by category and subcategory
