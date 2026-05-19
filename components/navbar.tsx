@@ -36,7 +36,7 @@ export default function Navbar() {
 
         {/* Desktop Menu */}
         <div className="hidden md:flex items-center gap-8">
-          <Link href="/products" className="text-sm font-medium hover:opacity-60 transition-opacity">
+          <Link href="/shop" className="text-sm font-medium hover:opacity-60 transition-opacity">
             Shop
           </Link>
           <Link href="/#story" className="text-sm font-medium hover:opacity-60 transition-opacity">
@@ -80,7 +80,7 @@ export default function Navbar() {
         <div className="md:hidden bg-white border-t border-gray-200">
           <div className="flex flex-col gap-4 p-6">
             <Link
-              href="/products"
+              href="/shop"
               className="text-sm font-medium hover:opacity-60 transition-opacity"
               onClick={() => setIsMobileMenuOpen(false)}
             >
