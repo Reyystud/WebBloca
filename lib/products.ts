@@ -8,65 +8,74 @@ export type Product = {
   isSale?: boolean
   description?: string
   features?: string[]
+  stock?: number
 }
 
-export const ALL_PRODUCTS: Product[] = [
-  // --- BRACELETS ---
-  { 
-    id: 'b-bc-1', 
-    name: 'Bon Claire Classic', 
-    price: 45.0, 
-    image: 'Catalog/Restock/Bon Claire/PHOTO-2026-04-09-14-20-50.jpg', 
-    category: 'Bracelet', 
-    subCategory: 'Bon Claire',
-    description: 'A timeless piece featuring classic beads and a minimalist design. Perfect for everyday wear.',
-    features: ['Handcrafted', 'Premium Beads', 'Adjustable Size']
-  },
-  { 
-    id: 'b-bc-2', 
-    name: 'Bon Claire Elegance', 
-    price: 50.0, 
-    image: 'Catalog/Restock/Bon Claire/PHOTO-2026-04-09-14-21-03.jpg', 
-    category: 'Bracelet', 
-    subCategory: 'Bon Claire', 
-    isSale: true,
-    description: 'Elevate your style with the Bon Claire Elegance. Featuring high-shine accents.',
-    features: ['High-Shine Accent', 'Durable Thread', 'Limited Edition']
-  },
-  { id: 'b-bc-3', name: 'Bon Claire Pearl', price: 48.0, image: 'Catalog/Restock/Bon Claire/PHOTO-2026-04-09-14-21-06.jpg', category: 'Bracelet', subCategory: 'Bon Claire' },
-  { id: 'b-bc-4', name: 'Bon Claire Gold Accent', price: 55.0, image: 'Catalog/Restock/Bon Claire/PHOTO-2026-04-09-14-21-07.jpg', category: 'Bracelet', subCategory: 'Bon Claire', isSale: true },
-  { id: 'b-bc-5', name: 'Bon Claire Minimal', price: 42.0, image: 'Catalog/Restock/Bon Claire/PHOTO-2026-04-09-14-21-08.jpg', category: 'Bracelet', subCategory: 'Bon Claire' },
-  
-  // Bub
+const LOCAL_PRODUCTS: Product[] = [
+  { id: 'b-bc-1', name: 'Bon Claire Classic', price: 45.0, image: 'Catalog/Restock/BonClaire/PHOTO-2026-04-09-14-20-50.jpg', category: 'Bracelet', subCategory: 'Bon Claire', description: 'A timeless piece featuring classic beads and a minimalist design. Perfect for everyday wear.', features: ['Handcrafted', 'Premium Beads', 'Adjustable Size'] },
+  { id: 'b-bc-2', name: 'Bon Claire Elegance', price: 50.0, image: 'Catalog/Restock/BonClaire/PHOTO-2026-04-09-14-21-03.jpg', category: 'Bracelet', subCategory: 'Bon Claire', isSale: true, description: 'Elevate your style with the Bon Claire Elegance. Featuring high-shine accents.', features: ['High-Shine Accent', 'Durable Thread', 'Limited Edition'] },
+  { id: 'b-bc-3', name: 'Bon Claire Pearl', price: 48.0, image: 'Catalog/Restock/BonClaire/PHOTO-2026-04-09-14-21-06.jpg', category: 'Bracelet', subCategory: 'Bon Claire' },
+  { id: 'b-bc-4', name: 'Bon Claire Gold Accent', price: 55.0, image: 'Catalog/Restock/BonClaire/PHOTO-2026-04-09-14-21-07.jpg', category: 'Bracelet', subCategory: 'Bon Claire', isSale: true },
+  { id: 'b-bc-5', name: 'Bon Claire Minimal', price: 42.0, image: 'Catalog/Restock/BonClaire/PHOTO-2026-04-09-14-21-08.jpg', category: 'Bracelet', subCategory: 'Bon Claire' },
   { id: 'b-bub-1', name: 'Bub Minimalist', price: 35.0, image: 'Catalog/Restock/Bub/PHOTO-2026-04-09-14-23-35.jpg', category: 'Bracelet', subCategory: 'Bub' },
   { id: 'b-bub-2', name: 'Bub Thread', price: 30.0, image: 'Catalog/Restock/Bub/PHOTO-2026-04-09-14-23-40.jpg', category: 'Bracelet', subCategory: 'Bub', isSale: true },
   { id: 'b-bub-3', name: 'Bub Sky Blue', price: 32.0, image: 'Catalog/Restock/Bub/PHOTO-2026-04-09-14-23-41.jpg', category: 'Bracelet', subCategory: 'Bub' },
   { id: 'b-bub-4', name: 'Bub Forest Green', price: 32.0, image: 'Catalog/Restock/Bub/PHOTO-2026-04-09-14-23-42.jpg', category: 'Bracelet', subCategory: 'Bub' },
   { id: 'b-bub-5', name: 'Bub Sunset Orange', price: 32.0, image: 'Catalog/Restock/Bub/PHOTO-2026-04-09-14-23-46.jpg', category: 'Bracelet', subCategory: 'Bub', isSale: true },
-
-  // Wicky
   { id: 'b-w-1', name: 'Wicky Charm', price: 40.0, image: 'Catalog/Restock/Wicky/PHOTO-2026-04-09-14-25-52.jpg', category: 'Bracelet', subCategory: 'Wicky' },
   { id: 'b-w-2', name: 'Wicky Star', price: 42.0, image: 'Catalog/Restock/Wicky/PHOTO-2026-04-09-14-25-53.jpg', category: 'Bracelet', subCategory: 'Wicky', isSale: true },
   { id: 'b-w-3', name: 'Wicky Moon', price: 42.0, image: 'Catalog/Restock/Wicky/PHOTO-2026-04-09-14-26-00.jpg', category: 'Bracelet', subCategory: 'Wicky' },
   { id: 'b-w-4', name: 'Wicky Heart', price: 42.0, image: 'Catalog/Restock/Wicky/PHOTO-2026-04-09-14-26-01.jpg', category: 'Bracelet', subCategory: 'Wicky', isSale: true },
-
-  // --- PHONE STRAPS ---
   { id: 'ps-bu-1', name: 'Buggle Pearl Strap', price: 25.0, image: 'Catalog/Buggle/IMG_20260505_155901-Photoroom.jpg', category: 'Phone strap', subCategory: 'Buggle' },
   { id: 'ps-bu-2', name: 'Buggle Crystal Strap', price: 28.0, image: 'Catalog/Buggle/IMG_20260505_160055-Photoroom.jpg', category: 'Phone strap', subCategory: 'Buggle', isSale: true },
   { id: 'ps-bu-3', name: 'Buggle Pastel Mix', price: 26.0, image: 'Catalog/Buggle/IMG20260505155557-Photoroom.jpg', category: 'Phone strap', subCategory: 'Buggle' },
   { id: 'ps-bu-4', name: 'Buggle Ocean Blue', price: 26.0, image: 'Catalog/Buggle/IMG20260505155654-Photoroom.jpg', category: 'Phone strap', subCategory: 'Buggle', isSale: true },
-  
   { id: 'ps-ba-1', name: 'Basic Black Strap', price: 18.0, image: 'Catalog/Buggle/IMG20260505155512-Photoroom.jpg', category: 'Phone strap', subCategory: 'Basic' },
   { id: 'ps-ba-2', name: 'Basic White Strap', price: 18.0, image: 'Catalog/Buggle/IMG20260505155803-Photoroom.jpg', category: 'Phone strap', subCategory: 'Basic' },
-
-  // --- BAG CHARMS ---
   { id: 'bc-bt-1', name: 'Ballet Ribbon Charm', price: 30.0, image: 'Model/BalletBagCharm.jpeg', category: 'Bag charm', subCategory: 'Ballet' },
   { id: 'bc-sp-1', name: 'Sparkle Heart Charm', price: 32.0, image: 'Model/solitaresparklerings.jpeg', category: 'Bag charm', subCategory: 'Sparkle' },
   { id: 'bc-bu-1', name: 'Buggle Bag Charm', price: 28.0, image: 'Catalog/Buggle/IMG20260505155955-Photoroom.jpg', category: 'Bag charm', subCategory: 'Ballet', isSale: true },
-
-  // --- KEYCHAINS ---
   { id: 'kc-si-1', name: 'Silver Star Keychain', price: 15.0, image: 'Catalog/Buggle/IMG_20260505_160318-Photoroom.jpg', category: 'Keychain', subCategory: 'Silver' },
   { id: 'kc-be-1', name: 'Beaded Flower Keychain', price: 20.0, image: 'Catalog/Buggle/IMG20260505161005-Photoroom.jpg', category: 'Keychain', subCategory: 'Beaded' },
   { id: 'kc-bu-1', name: 'Buggle Mascot Keychain', price: 18.0, image: 'Catalog/Buggle/IMG20260505160214-Photoroom.jpg', category: 'Keychain', subCategory: 'Beaded', isSale: true },
   { id: 'kc-gl-1', name: 'Glow in Dark Keychain', price: 22.0, image: 'Catalog/Buggle/IMG20260505160412-Photoroom.jpg', category: 'Keychain', subCategory: 'Silver' },
 ]
+
+export const ALL_PRODUCTS = LOCAL_PRODUCTS
+
+function parseProduct(raw: any): Product {
+  return {
+    ...raw,
+    features: raw.features
+      ? typeof raw.features === 'string'
+        ? JSON.parse(raw.features)
+        : raw.features
+      : undefined,
+    isSale: raw.isSale ?? false,
+  }
+}
+
+export async function getProducts(): Promise<Product[]> {
+  try {
+    const res = await fetch('/api/products', { cache: 'no-store' })
+    if (res.ok) {
+      const data = await res.json()
+      return data.map(parseProduct)
+    }
+  } catch {
+    // Fall back to local data
+  }
+  return LOCAL_PRODUCTS
+}
+
+export async function getProductById(id: string): Promise<Product | undefined> {
+  try {
+    const res = await fetch(`/api/products/${id}`, { cache: 'no-store' })
+    if (res.ok) {
+      return parseProduct(await res.json())
+    }
+  } catch {
+    // Fall back to local data
+  }
+  return LOCAL_PRODUCTS.find((p) => p.id === id)
+}

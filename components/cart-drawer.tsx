@@ -2,7 +2,6 @@
 
 import { useCart } from '@/context/cart-context'
 import { X, Plus, Minus, ShoppingBag } from 'lucide-react'
-import Link from 'next/link'
 
 export default function CartDrawer() {
   const { items, isOpen, closeCart, removeItem, updateQuantity, getTotalPrice, getItemCount } = useCart()
@@ -154,21 +153,20 @@ export default function CartDrawer() {
                 <span className="font-semibold">{subtotal >= freeShippingThreshold ? 'Free' : 'Calculated at checkout'}</span>
               </div>
 
-              {/* Checkout Button */}
-              <Link
-                href="/checkout"
-                onClick={closeCart}
-                className="block w-full btn-primary text-center"
-              >
-                Proceed to Checkout
-              </Link>
+{/* Checkout Button */}
+            <button
+              onClick={closeCart}
+              className="block w-full btn-primary text-center"
+            >
+              Proceed to Checkout
+            </button>
 
-              <button
-                onClick={closeCart}
-                className="w-full py-3 text-sm font-semibold hover:bg-gray-50 transition-colors"
-              >
-                Continue Shopping
-              </button>
+            <button
+              onClick={closeCart}
+              className="w-full py-3 text-sm font-semibold hover:bg-gray-50 transition-colors"
+            >
+              Continue Shopping
+            </button>
             </div>
           </>
         )}

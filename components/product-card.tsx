@@ -16,7 +16,7 @@ interface ProductCardProps {
 export default function ProductCard({ id, name, price, image, isBestSeller }: ProductCardProps) {
   const [isHovered, setIsHovered] = useState(false)
   const [isFavorited, setIsFavorited] = useState(false)
-  const { addToCart } = useCart()
+  const { addItem } = useCart()
 
   return (
     <Link href={`/products/${id}`} className="group block">
@@ -77,7 +77,7 @@ export default function ProductCard({ id, name, price, image, isBestSeller }: Pr
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
-            addToCart({ id, name, price, image });
+            addItem({ id, name, price, image });
           }}
           className="p-2.5 bg-gray-900 text-white rounded-full hover:bg-black transition-colors shadow-sm"
           title="Add to Cart"

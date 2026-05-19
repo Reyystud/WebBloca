@@ -1,21 +1,23 @@
 'use client'
 
 import { useParams } from 'next/navigation'
-import { useState } from 'react'
-import Image from 'next/image'
+import { useState, useEffect } from 'react'
 import { Plus, Minus, ShieldCheck, CreditCard, RotateCcw, Heart } from 'lucide-react'
-import { ALL_PRODUCTS, Product } from '@/lib/products'
+import { ALL_PRODUCTS, getProductById, type Product } from '@/lib/products'
 import ProductCard from '@/components/product-card'
 import { useCart } from '@/context/cart-context'
 
 export default function ProductDetailPage() {
   const { id } = useParams()
-  const { addToCart } = useCart()
-  const product = ALL_PRODUCTS.find(p => p.id === id)
-  
+  const { addItem } = useCart()
+  const [product, setProduct] = useState<Product | undefined>(undefined)
   const [quantity, setQuantity] = useState(1)
   const [selectedSize, setSelectedSize] = useState('STANDARD')
-  
+
+  useEffect(() => {
+    getProductById(id as string).then(setProduct)
+  }, [id])
+
   if (!product) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -24,15 +26,13 @@ export default function ProductDetailPage() {
     )
   }
 
-  // Related products for "Frequently Bought Together"
   const relatedProducts = ALL_PRODUCTS
     .filter(p => p.id !== product.id && p.category === product.category)
     .slice(0, 3)
 
   const handleAddToCart = () => {
-    // Adding to cart context (assuming context handles quantity or we can pass it)
     for (let i = 0; i < quantity; i++) {
-      addToCart({
+      addItem({
         id: product.id,
         name: product.name,
         price: product.price,
@@ -59,7 +59,6 @@ export default function ProductDetailPage() {
               </button>
             </div>
             
-            {/* Thumbnails (Simulated) */}
             <div className="flex gap-4">
               {[1, 2, 3, 4].map((i) => (
                 <div key={i} className={`w-20 aspect-square rounded-lg border-2 overflow-hidden cursor-pointer transition-all ${i === 1 ? 'border-black' : 'border-transparent opacity-60 hover:opacity-100'}`}>
@@ -157,27 +156,28 @@ export default function ProductDetailPage() {
             </div>
 
             {/* Frequently Bought Together */}
-            <div className="border-t border-gray-100 pt-10">
-              <h3 className="text-xs font-bold tracking-[0.2em] uppercase text-gray-900 mb-8">Frequently Bought Together</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                {relatedProducts.map((p) => (
-                  <div key={p.id} className="group">
-                    <div className="aspect-square bg-gray-50 rounded-lg overflow-hidden mb-4">
-                      <img src={p.image.startsWith('/') ? p.image : `/${p.image}`} alt={p.name} className="w-full h-full object-cover" />
+            {relatedProducts.length > 0 && (
+              <div className="border-t border-gray-100 pt-10">
+                <h3 className="text-xs font-bold tracking-[0.2em] uppercase text-gray-900 mb-8">Frequently Bought Together</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                  {relatedProducts.map((p) => (
+                    <div key={p.id} className="group">
+                      <div className="aspect-square bg-gray-50 rounded-lg overflow-hidden mb-4">
+                        <img src={p.image.startsWith('/') ? p.image : `/${p.image}`} alt={p.name} className="w-full h-full object-cover" />
+                      </div>
+                      <h4 className="text-[10px] font-bold uppercase tracking-widest mb-1 truncate">{p.name}</h4>
+                      <p className="text-xs text-gray-500 mb-3">${p.price.toFixed(2)}</p>
+                      <button 
+                        onClick={() => addItem({ id: p.id, name: p.name, price: p.price, image: p.image })}
+                        className="w-full border border-black py-2 text-[9px] font-bold uppercase tracking-widest hover:bg-black hover:text-white transition-all"
+                      >
+                        Add
+                      </button>
                     </div>
-                    <h4 className="text-[10px] font-bold uppercase tracking-widest mb-1 truncate">{p.name}</h4>
-                    <p className="text-xs text-gray-500 mb-3">${p.price.toFixed(2)}</p>
-                    <button 
-                      onClick={() => addToCart({ id: p.id, name: p.name, price: p.price, image: p.image })}
-                      className="w-full border border-black py-2 text-[9px] font-bold uppercase tracking-widest hover:bg-black hover:text-white transition-all"
-                    >
-                      Add
-                    </button>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
-            </div>
-
+            )}
           </div>
         </div>
 

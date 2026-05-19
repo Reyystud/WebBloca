@@ -2,7 +2,9 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { Eye, EyeOff, Chrome, Instagram } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { Eye, EyeOff } from 'lucide-react'
+import { useAuth } from '@/context/auth-context'
 
 export default function LoginForm() {
   const [email, setEmail] = useState('')
@@ -10,6 +12,8 @@ export default function LoginForm() {
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
+  const { signIn } = useAuth()
+  const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -17,10 +21,15 @@ export default function LoginForm() {
     setIsLoading(true)
 
     try {
-      // TODO: Implement actual login logic
-      await new Promise((resolve) => setTimeout(resolve, 500))
-      console.log('Login attempt:', { email, password })
-    } catch (err) {
+      const { error: authError } = await signIn(email, password)
+      if (authError) {
+        setError(authError)
+        return
+      }
+      // Ensure profile exists in DB
+      await fetch('/api/auth', { method: 'POST' }).catch(() => {})
+      router.push('/account')
+    } catch {
       setError('Invalid credentials. Please try again.')
     } finally {
       setIsLoading(false)
@@ -30,7 +39,6 @@ export default function LoginForm() {
   return (
     <div className="w-full max-w-md mx-auto">
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Email */}
         <div>
           <label htmlFor="email" className="block text-sm font-semibold mb-2">
             Email
@@ -46,7 +54,6 @@ export default function LoginForm() {
           />
         </div>
 
-        {/* Password */}
         <div>
           <label htmlFor="password" className="block text-sm font-semibold mb-2">
             Password
@@ -71,7 +78,6 @@ export default function LoginForm() {
           </div>
         </div>
 
-        {/* Remember & Forgot */}
         <div className="flex items-center justify-between">
           <label className="flex items-center gap-2 text-sm">
             <input type="checkbox" className="w-4 h-4 border border-gray-300 rounded" />
@@ -82,14 +88,12 @@ export default function LoginForm() {
           </Link>
         </div>
 
-        {/* Error Message */}
         {error && (
           <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
             {error}
           </div>
         )}
 
-        {/* Submit Button */}
         <button
           type="submit"
           disabled={isLoading}
@@ -99,7 +103,6 @@ export default function LoginForm() {
         </button>
       </form>
 
-      {/* Divider */}
       <div className="relative my-8">
         <div className="absolute inset-0 flex items-center">
           <div className="w-full border-t border-gray-300" />
@@ -109,27 +112,17 @@ export default function LoginForm() {
         </div>
       </div>
 
-      {/* Social Login */}
       <div className="space-y-3">
         <button
           type="button"
           className="w-full px-4 py-3 border border-gray-300 rounded-lg font-semibold hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
         >
-          <Chrome size={18} />
           Google
-        </button>
-        <button
-          type="button"
-          className="w-full px-4 py-3 border border-gray-300 rounded-lg font-semibold hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
-        >
-          <Instagram size={18} />
-          Instagram
         </button>
       </div>
 
-      {/* Sign Up Link */}
       <p className="text-center text-sm text-gray-600 mt-6">
-        Don't have an account?{' '}
+        Don&apos;t have an account?{' '}
         <Link href="/auth/register" className="font-semibold text-black hover:opacity-60 transition-opacity">
           Sign up here
         </Link>

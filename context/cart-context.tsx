@@ -1,6 +1,6 @@
 'use client'
 
-import React, { createContext, useContext, useState, useCallback } from 'react'
+import React, { createContext, useContext, useState, useCallback, useEffect } from 'react'
 
 export interface CartItem {
   id: string
@@ -28,6 +28,21 @@ const CartContext = createContext<CartContextType | undefined>(undefined)
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([])
   const [isOpen, setIsOpen] = useState(false)
+
+  useEffect(() => {
+    const stored = localStorage.getItem('bloca_cart')
+    if (stored) {
+      try {
+        setItems(JSON.parse(stored))
+      } catch {
+        localStorage.removeItem('bloca_cart')
+      }
+    }
+  }, [])
+
+  useEffect(() => {
+    localStorage.setItem('bloca_cart', JSON.stringify(items))
+  }, [items])
 
   const addItem = useCallback((item: Omit<CartItem, 'quantity'>) => {
     setItems((prevItems) => {
