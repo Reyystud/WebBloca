@@ -7,10 +7,18 @@ __v0_jsx-dev-runtime.ts
 .vercel/
 next.user-config.*
 
-# Environment variables
+# Environment variables (contains secrets!)
+.env
 .env*.local
 
 # Common ignores
 node_modules
 .next/
 .DS_Store
+/lib/generated/prisma
+
+# Uploaded files
+/public/uploads/
+
+# Prisma
+prisma/migrations/

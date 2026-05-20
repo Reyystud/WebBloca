@@ -2,7 +2,9 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { Eye, EyeOff, Chrome, Instagram } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { Eye, EyeOff } from 'lucide-react'
+import { useAuth } from '@/context/auth-context'
 
 export default function RegisterForm() {
   const [formData, setFormData] = useState({
@@ -15,6 +17,8 @@ export default function RegisterForm() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
+  const { signUp } = useAuth()
+  const router = useRouter()
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
@@ -41,13 +45,15 @@ export default function RegisterForm() {
     setIsLoading(true)
 
     try {
-      // TODO: Implement actual registration logic
-      await new Promise((resolve) => setTimeout(resolve, 500))
-      console.log('Registration attempt:', {
-        name: formData.name,
-        email: formData.email,
-      })
-    } catch (err) {
+      const { error: authError } = await signUp(formData.email, formData.password, formData.name)
+      if (authError) {
+        setError(authError)
+        return
+      }
+      // Ensure profile exists in DB
+      await fetch('/api/auth', { method: 'POST' }).catch(() => {})
+      router.push('/account')
+    } catch {
       setError('Registration failed. Please try again.')
     } finally {
       setIsLoading(false)
@@ -57,7 +63,6 @@ export default function RegisterForm() {
   return (
     <div className="w-full max-w-md mx-auto">
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Name */}
         <div>
           <label htmlFor="name" className="block text-sm font-semibold mb-2">
             Full Name
@@ -74,7 +79,6 @@ export default function RegisterForm() {
           />
         </div>
 
-        {/* Email */}
         <div>
           <label htmlFor="email" className="block text-sm font-semibold mb-2">
             Email
@@ -91,7 +95,6 @@ export default function RegisterForm() {
           />
         </div>
 
-        {/* Password */}
         <div>
           <label htmlFor="password" className="block text-sm font-semibold mb-2">
             Password
@@ -120,7 +123,6 @@ export default function RegisterForm() {
           </p>
         </div>
 
-        {/* Confirm Password */}
         <div>
           <label htmlFor="confirmPassword" className="block text-sm font-semibold mb-2">
             Confirm Password
@@ -146,7 +148,6 @@ export default function RegisterForm() {
           </div>
         </div>
 
-        {/* Terms */}
         <label className="flex items-start gap-2 text-sm">
           <input type="checkbox" className="w-4 h-4 border border-gray-300 rounded mt-1" required />
           <span>
@@ -161,14 +162,12 @@ export default function RegisterForm() {
           </span>
         </label>
 
-        {/* Error Message */}
         {error && (
           <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
             {error}
           </div>
         )}
 
-        {/* Submit Button */}
         <button
           type="submit"
           disabled={isLoading}
@@ -178,7 +177,6 @@ export default function RegisterForm() {
         </button>
       </form>
 
-      {/* Divider */}
       <div className="relative my-8">
         <div className="absolute inset-0 flex items-center">
           <div className="w-full border-t border-gray-300" />
@@ -188,25 +186,15 @@ export default function RegisterForm() {
         </div>
       </div>
 
-      {/* Social Login */}
       <div className="space-y-3">
         <button
           type="button"
           className="w-full px-4 py-3 border border-gray-300 rounded-lg font-semibold hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
         >
-          <Chrome size={18} />
           Google
-        </button>
-        <button
-          type="button"
-          className="w-full px-4 py-3 border border-gray-300 rounded-lg font-semibold hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
-        >
-          <Instagram size={18} />
-          Instagram
         </button>
       </div>
 
-      {/* Login Link */}
       <p className="text-center text-sm text-gray-600 mt-6">
         Already have an account?{' '}
         <Link href="/auth/login" className="font-semibold text-black hover:opacity-60 transition-opacity">

@@ -1,0 +1,192 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id        String    @id @default(cuid())
+  email     String    @unique
+  name      String?
+  phone     String?
+  address   String?
+  role      Role      @default(USER)
+  points    Int       @default(0)
+  tier      Tier      @default(SILVER)
+  createdAt DateTime  @default(now())
+updatedAt DateTime  @default(now()) @updatedAt
+
+  orders        Order[]
+  cartItems     CartItem[]
+  wishlistItems WishlistItem[]
+
+  @@index([email])
+  @@map("users")
+}
+
+model Product {
+  id          String   @id @default(cuid())
+  name        String
+  price       Decimal  @db.Decimal(10, 2)
+  image       String
+  category    String
+  subCategory String?
+  isSale      Boolean  @default(false)
+  description String?
+  features    Json?
+  stock       Int      @default(100)
+  isDeleted   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  cartItems     CartItem[]
+  wishlistItems WishlistItem[]
+
+  @@index([category])
+  @@index([isSale])
+  @@index([isDeleted])
+  @@map("products")
+}
+
+model Order {
+  id                 String        @id @default(cuid())
+  userId             String
+  status             OrderStatus   @default(PENDING)
+  paymentStatus      PaymentStatus @default(UNPAID)
+  totalAmount        Decimal       @db.Decimal(10, 2)
+  shippingCost       Decimal       @db.Decimal(10, 2) @default(0)
+  shippingName       String?
+  shippingPhone      String?
+  shippingAddress    String?
+  shippingCity       String?
+  shippingProvince   String?
+  shippingPostalCode String?
+  trackingNumber     String?
+  trackingProvider   String?
+  paymentMethod      String?
+  paymentReference   String?
+  paymentPaidAt      DateTime?
+  updatedAt          DateTime      @updatedAt
+  createdAt          DateTime      @default(now())
+
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orderItems OrderItem[]
+  payments   Payment[]
+
+  @@index([userId])
+  @@index([status])
+  @@index([paymentStatus])
+  @@map("orders")
+}
+
+model OrderItem {
+  id              String  @id @default(cuid())
+  orderId         String
+  productId       String?
+  productName     String
+  productImage    String
+  quantity        Int
+  priceAtPurchase Decimal @db.Decimal(10, 2)
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+  @@map("order_items")
+}
+
+model CartItem {
+  id        String @id @default(cuid())
+  userId    String
+  productId String
+  quantity  Int    @default(1)
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, productId])
+  @@index([userId])
+  @@map("cart_items")
+}
+
+model WishlistItem {
+  id        String @id @default(cuid())
+  userId    String
+  productId String
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, productId])
+  @@index([userId])
+  @@map("wishlist_items")
+}
+
+model Payment {
+  id                String        @id @default(cuid())
+  orderId          String
+  xenditInvoiceId  String?       @unique
+  xenditExternalId String?
+  amount           Decimal       @db.Decimal(10, 2)
+  paymentMethod    String?
+  paymentStatus    PaymentStatus @default(UNPAID)
+  paymentUrl       String?
+  qrCodeUrl        String?
+  paidAt           DateTime?
+  expiredAt        DateTime?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+  @@index([xenditInvoiceId])
+  @@map("payments")
+}
+
+model ShippingRate {
+  id            String  @id @default(cuid())
+  city          String
+  province      String
+  courier       String
+  service       String
+  price         Decimal @db.Decimal(10, 2)
+  estimatedDays String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([city, courier])
+  @@map("shipping_rates")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum Tier {
+  SILVER
+  GOLD
+  PLATINUM
+}
+
+enum OrderStatus {
+  PENDING
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  UNPAID
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+  EXPIRED
+}

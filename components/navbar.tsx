@@ -2,13 +2,15 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { Search, User, ShoppingBag, Menu, X } from 'lucide-react'
+import { Search, User, ShoppingBag, Menu, X, Shield } from 'lucide-react'
 import { useCart } from '@/context/cart-context'
+import { useAuth } from '@/context/auth-context'
 
 export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const { getItemCount, openCart } = useCart()
+  const { user, profile, loading, signOut } = useAuth()
 
   useEffect(() => {
     const handleScroll = () => {
@@ -26,7 +28,6 @@ export default function Navbar() {
       }`}
     >
       <div className="max-w-7xl mx-auto px-6 sm:px-8 md:px-12 h-16 flex items-center justify-between">
-        {/* Logo */}
         <Link
           href="/"
           className="text-2xl font-bold tracking-tighter hover:opacity-75 transition-opacity"
@@ -34,27 +35,61 @@ export default function Navbar() {
           BLOCA
         </Link>
 
-        {/* Desktop Menu */}
         <div className="hidden md:flex items-center gap-8">
-          <Link href="/products" className="text-sm font-medium hover:opacity-60 transition-opacity">
+          <Link href="/shop" className="text-sm font-medium hover:opacity-60 transition-opacity">
             Shop
           </Link>
           <Link href="/#story" className="text-sm font-medium hover:opacity-60 transition-opacity">
             Story
           </Link>
-          <Link href="/account" className="text-sm font-medium hover:opacity-60 transition-opacity">
-            Account
-          </Link>
+          {profile?.role === 'ADMIN' && (
+            <Link href="/admin" className="text-sm font-medium hover:opacity-60 transition-opacity flex items-center gap-1">
+              <Shield size={14} />
+              Admin
+            </Link>
+          )}
         </div>
 
-        {/* Icons */}
         <div className="flex items-center gap-4">
           <button className="p-2 hover:opacity-60 transition-opacity">
             <Search size={20} strokeWidth={1.5} />
           </button>
-          <Link href="/account" className="p-2 hover:opacity-60 transition-opacity">
-            <User size={20} strokeWidth={1.5} />
-          </Link>
+          {loading ? (
+            <div className="w-5 h-5 border-2 border-gray-300 border-t-black rounded-full animate-spin" />
+          ) : user ? (
+            <div className="relative group">
+              <button className="p-2 hover:opacity-60 transition-opacity">
+                <User size={20} strokeWidth={1.5} />
+              </button>
+              <div className="absolute right-0 top-full mt-1 w-48 bg-white border border-gray-200 rounded-lg shadow-lg py-2 hidden group-hover:block">
+                <Link href="/account" className="block px-4 py-2 text-sm hover:bg-gray-50 transition-colors">
+                  My Account
+                </Link>
+                <Link href="/account/orders" className="block px-4 py-2 text-sm hover:bg-gray-50 transition-colors">
+                  Orders
+                </Link>
+                <Link href="/account/wishlist" className="block px-4 py-2 text-sm hover:bg-gray-50 transition-colors">
+                  Wishlist
+                </Link>
+                {profile?.role === 'ADMIN' && (
+                  <Link href="/admin" className="block px-4 py-2 text-sm hover:bg-gray-50 transition-colors">
+                    Admin Dashboard
+                  </Link>
+                )}
+                <hr className="my-1" />
+                <button
+                  onClick={signOut}
+                  className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-50 transition-colors text-red-600"
+                >
+                  Sign Out
+                </button>
+              </div>
+            </div>
+          ) : (
+            <Link href="/auth/login" className="p-2 hover:opacity-60 transition-opacity">
+              <User size={20} strokeWidth={1.5} />
+            </Link>
+          )}
           <button
             onClick={openCart}
             className="p-2 hover:opacity-60 transition-opacity relative"
@@ -65,7 +100,6 @@ export default function Navbar() {
             </span>
           </button>
 
-          {/* Mobile Menu Button */}
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             className="md:hidden p-2 hover:opacity-60 transition-opacity"
@@ -75,12 +109,11 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* Mobile Menu */}
       {isMobileMenuOpen && (
         <div className="md:hidden bg-white border-t border-gray-200">
           <div className="flex flex-col gap-4 p-6">
             <Link
-              href="/products"
+              href="/shop"
               className="text-sm font-medium hover:opacity-60 transition-opacity"
               onClick={() => setIsMobileMenuOpen(false)}
             >
@@ -93,13 +126,17 @@ export default function Navbar() {
             >
               Story
             </Link>
-            <Link
-              href="/account"
-              className="text-sm font-medium hover:opacity-60 transition-opacity"
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              Account
-            </Link>
+            {user ? (
+              <>
+                <Link href="/account" className="text-sm font-medium" onClick={() => setIsMobileMenuOpen(false)}>Account</Link>
+                {profile?.role === 'ADMIN' && (
+                  <Link href="/admin" className="text-sm font-medium" onClick={() => setIsMobileMenuOpen(false)}>Admin</Link>
+                )}
+                <button onClick={() => { signOut(); setIsMobileMenuOpen(false) }} className="text-sm font-medium text-red-600 text-left">Sign Out</button>
+              </>
+            ) : (
+              <Link href="/auth/login" className="text-sm font-medium" onClick={() => setIsMobileMenuOpen(false)}>Sign In</Link>
+            )}
           </div>
         </div>
       )}

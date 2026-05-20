@@ -1,14 +1,18 @@
 'use client'
 
 import { useCart } from '@/context/cart-context'
+import { useAuth } from '@/context/auth-context'
+import { useRouter } from 'next/navigation'
 import { X, Plus, Minus, ShoppingBag } from 'lucide-react'
-import Link from 'next/link'
+import { formatPrice } from '@/lib/format'
 
 export default function CartDrawer() {
   const { items, isOpen, closeCart, removeItem, updateQuantity, getTotalPrice, getItemCount } = useCart()
+  const { user } = useAuth()
+  const router = useRouter()
 
   const subtotal = getTotalPrice()
-  const freeShippingThreshold = 100
+  const freeShippingThreshold = 500000
   const shippingProgress = (subtotal / freeShippingThreshold) * 100
 
   // Sample recommended products
@@ -69,7 +73,7 @@ export default function CartDrawer() {
                   <div className="flex-1 flex flex-col">
                     <h3 className="font-semibold text-sm mb-1">{item.name}</h3>
                     <p className="text-sm text-gray-600 mb-3">
-                      ${item.price.toFixed(2)}
+                      {formatPrice(item.price)}
                     </p>
 
                     {/* Quantity Controls */}
@@ -110,7 +114,7 @@ export default function CartDrawer() {
             {/* Free Shipping Progress */}
             <div className="px-6 py-6 border-t border-gray-200 bg-gray-50">
               <p className="text-sm font-semibold mb-3">
-                Free shipping on orders over $100
+                Free shipping on orders over Rp 500.000
               </p>
               <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
                 <div
@@ -120,7 +124,7 @@ export default function CartDrawer() {
               </div>
               <p className="text-xs text-gray-600 mt-2">
                 {subtotal < freeShippingThreshold
-                  ? `Add $${(freeShippingThreshold - subtotal).toFixed(2)} more for free shipping`
+                  ? `Add ${formatPrice(freeShippingThreshold - Number(subtotal))} more for free shipping`
                   : '✓ Free shipping qualified!'}
               </p>
             </div>
@@ -135,7 +139,7 @@ export default function CartDrawer() {
                       <div className="w-12 h-12 bg-gray-200 rounded flex-shrink-0" />
                       <div>
                         <p className="text-xs font-semibold">{product.name}</p>
-                        <p className="text-xs text-gray-600">${product.price.toFixed(2)}</p>
+                        <p className="text-xs text-gray-600">{formatPrice(product.price)}</p>
                       </div>
                     </div>
                   ))}
@@ -147,28 +151,34 @@ export default function CartDrawer() {
             <div className="px-6 py-6 border-t border-gray-200 bg-white space-y-4">
               <div className="flex justify-between text-sm">
                 <span className="text-gray-600">Subtotal</span>
-                <span className="font-semibold">${subtotal.toFixed(2)}</span>
+                <span className="font-semibold">{formatPrice(subtotal)}</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-gray-600">Shipping</span>
                 <span className="font-semibold">{subtotal >= freeShippingThreshold ? 'Free' : 'Calculated at checkout'}</span>
               </div>
 
-              {/* Checkout Button */}
-              <Link
-                href="/checkout"
-                onClick={closeCart}
-                className="block w-full btn-primary text-center"
-              >
-                Proceed to Checkout
-              </Link>
+{/* Checkout Button */}
+            <button
+              onClick={() => {
+                closeCart()
+                if (!user) {
+                  router.push('/account?redirect=/checkout')
+                } else {
+                  router.push('/checkout')
+                }
+              }}
+              className="block w-full btn-primary text-center"
+            >
+              {user ? 'Proceed to Checkout' : 'Sign In to Checkout'}
+            </button>
 
-              <button
-                onClick={closeCart}
-                className="w-full py-3 text-sm font-semibold hover:bg-gray-50 transition-colors"
-              >
-                Continue Shopping
-              </button>
+            <button
+              onClick={closeCart}
+              className="w-full py-3 text-sm font-semibold hover:bg-gray-50 transition-colors"
+            >
+              Continue Shopping
+            </button>
             </div>
           </>
         )}

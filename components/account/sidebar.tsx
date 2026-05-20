@@ -3,7 +3,8 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { User, ShoppingBag, Heart, Gift, LogOut, Menu, X } from 'lucide-react'
+import { User, ShoppingBag, Heart, Gift, LogOut, Menu, X, Shield } from 'lucide-react'
+import { useAuth } from '@/context/auth-context'
 
 const menuItems = [
   { href: '/account', label: 'Dashboard', icon: User },
@@ -14,12 +15,30 @@ const menuItems = [
 
 export default function AccountSidebar() {
   const pathname = usePathname()
+  const { profile, signOut } = useAuth()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+
+  const handleSignOut = async () => {
+    await signOut()
+    window.location.href = '/auth/login'
+  }
 
   return (
     <>
       {/* Desktop Sidebar */}
       <aside className="hidden md:block w-48 border-r border-gray-200 pr-8">
+        {profile && (
+          <div className="mb-6">
+            <p className="font-semibold text-sm truncate">{profile.name || profile.email}</p>
+            <p className="text-xs text-gray-500 truncate">{profile.email}</p>
+            {profile.role === 'ADMIN' && (
+              <Link href="/admin" className="inline-flex items-center gap-1 mt-1 text-xs text-black font-medium">
+                <Shield size={12} />
+                Admin Dashboard
+              </Link>
+            )}
+          </div>
+        )}
         <nav className="space-y-2">
           {menuItems.map((item) => {
             const Icon = item.icon
@@ -41,8 +60,10 @@ export default function AccountSidebar() {
           })}
         </nav>
 
-        {/* Logout Button */}
-        <button className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors mt-8 font-medium">
+        <button
+          onClick={handleSignOut}
+          className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors mt-8 font-medium"
+        >
           <LogOut size={20} />
           Sign Out
         </button>
@@ -62,6 +83,12 @@ export default function AccountSidebar() {
       {/* Mobile Menu */}
       {isMobileMenuOpen && (
         <nav className="md:hidden space-y-2 mb-6">
+          {profile && (
+            <div className="mb-4 px-4">
+              <p className="font-semibold text-sm">{profile.name || profile.email}</p>
+              <p className="text-xs text-gray-500">{profile.email}</p>
+            </div>
+          )}
           {menuItems.map((item) => {
             const Icon = item.icon
             const isActive = pathname === item.href
@@ -81,7 +108,10 @@ export default function AccountSidebar() {
               </Link>
             )
           })}
-          <button className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors mt-4 font-medium">
+          <button
+            onClick={handleSignOut}
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors mt-4 font-medium"
+          >
             <LogOut size={20} />
             Sign Out
           </button>

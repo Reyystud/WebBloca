@@ -2,7 +2,9 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { Heart } from 'lucide-react'
+import { Heart, ShoppingCart } from 'lucide-react'
+import { useCart } from '@/context/cart-context'
+import { formatPrice } from '@/lib/format'
 
 interface ProductCardProps {
   id: string
@@ -15,60 +17,75 @@ interface ProductCardProps {
 export default function ProductCard({ id, name, price, image, isBestSeller }: ProductCardProps) {
   const [isHovered, setIsHovered] = useState(false)
   const [isFavorited, setIsFavorited] = useState(false)
+  const { addItem } = useCart()
 
   return (
-    <div className="group">
+    <Link href={`/products/${id}`} className="group block">
       <div
         className="relative bg-gray-50 aspect-square rounded-lg overflow-hidden mb-4 cursor-pointer transition-all duration-300"
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
-        {/* Product Image Placeholder */}
-        <div className="absolute inset-0 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
-          <p className="text-gray-400 text-sm">Product Image</p>
-        </div>
+        {image ? (
+          <img
+            src={image.startsWith('/') || image.startsWith('http') ? image : `/${image}`}
+            alt={name}
+            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+          />
+        ) : (
+          <div className="absolute inset-0 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+            <p className="text-gray-400 text-sm">Product Image</p>
+          </div>
+        )}
 
         {/* Best Seller Badge */}
         {isBestSeller && (
           <div className="absolute top-4 left-4 z-10">
-            <span className="inline-block bg-black text-white text-xs font-semibold px-3 py-1 rounded-full">
+            <span className="inline-block bg-black text-white text-[10px] font-bold tracking-widest uppercase px-3 py-1 rounded-full shadow-sm">
               Best Seller
             </span>
           </div>
         )}
 
-        {/* Quick Shop Overlay */}
-        <div
-          className={`absolute inset-0 bg-black/50 flex items-center justify-center transition-opacity duration-300 ${
-            isHovered ? 'opacity-100' : 'opacity-0'
-          }`}
-        >
-          <button className="btn-primary bg-white text-black hover:bg-gray-50">
-            Quick Shop
-          </button>
-        </div>
-
         {/* Favorite Button */}
         <button
-          onClick={() => setIsFavorited(!isFavorited)}
-          className="absolute top-4 right-4 z-20 p-2 bg-white rounded-full hover:bg-gray-100 transition-colors"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setIsFavorited(!isFavorited);
+          }}
+          className="absolute top-4 right-4 z-20 p-2 bg-white/80 backdrop-blur-sm rounded-full hover:bg-white transition-all shadow-sm"
         >
           <Heart
-            size={20}
+            size={18}
             className={isFavorited ? 'fill-red-500 text-red-500' : 'text-gray-600'}
           />
         </button>
       </div>
 
-      {/* Product Info */}
-      <Link href={`/products/${id}`} className="block group">
-        <h3 className="text-sm font-semibold mb-2 group-hover:opacity-60 transition-opacity">
-          {name}
-        </h3>
-        <p className="text-sm font-bold text-gray-900">
-          ${price.toFixed(2)}
-        </p>
-      </Link>
-    </div>
+      {/* Product Info & Action */}
+      <div className="flex items-start justify-between gap-4">
+        <div className="space-y-1 flex-1">
+          <h3 className="text-[11px] font-bold uppercase tracking-widest text-gray-900 group-hover:opacity-60 transition-opacity truncate">
+            {name}
+          </h3>
+          <p className="text-xs font-medium text-gray-500">
+            {formatPrice(price)}
+          </p>
+        </div>
+        
+        <button
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            addItem({ id, name, price, image });
+          }}
+          className="p-2.5 bg-gray-900 text-white rounded-full hover:bg-black transition-colors shadow-sm"
+          title="Add to Cart"
+        >
+          <ShoppingCart size={16} />
+        </button>
+      </div>
+    </Link>
   )
 }

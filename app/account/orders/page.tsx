@@ -1,40 +1,70 @@
-import { Package, Calendar, DollarSign, Truck } from 'lucide-react'
+'use client'
+
+import { useEffect, useState } from 'react'
+import { Package, Calendar, DollarSign, CreditCard } from 'lucide-react'
+import Link from 'next/link'
+import { formatPrice } from '@/lib/format'
+
+interface OrderItem {
+  id: string
+  productName: string
+  productImage: string
+  quantity: number
+  priceAtPurchase: number
+}
+
+interface Payment {
+  id: string
+  paymentStatus: string
+  paymentMethod: string | null
+}
+
+interface Order {
+  id: string
+  status: string
+  paymentStatus: string
+  totalAmount: number
+  shippingCost: number
+  createdAt: string
+  orderItems: OrderItem[]
+  payments: Payment[]
+}
+
+const statusColors: Record<string, string> = {
+  PENDING: 'bg-yellow-50 text-yellow-700 border-yellow-200',
+  PROCESSING: 'bg-blue-50 text-blue-700 border-blue-200',
+  SHIPPED: 'bg-indigo-50 text-indigo-700 border-indigo-200',
+  DELIVERED: 'bg-green-50 text-green-700 border-green-200',
+  CANCELLED: 'bg-red-50 text-red-700 border-red-200',
+}
+
+const paymentStatusColors: Record<string, string> = {
+  UNPAID: 'bg-gray-50 text-gray-600 border-gray-200',
+  PENDING: 'bg-yellow-50 text-yellow-700 border-yellow-200',
+  PAID: 'bg-green-50 text-green-700 border-green-200',
+  FAILED: 'bg-red-50 text-red-700 border-red-200',
+  REFUNDED: 'bg-orange-50 text-orange-700 border-orange-200',
+  EXPIRED: 'bg-gray-50 text-gray-500 border-gray-200',
+}
 
 export default function OrdersPage() {
-  // Sample order data
-  const orders = [
-    {
-      id: '#BLC001',
-      date: 'March 15, 2024',
-      total: 149.97,
-      status: 'Delivered',
-      items: 3,
-      image: 'Order 1',
-    },
-    {
-      id: '#BLC002',
-      date: 'March 8, 2024',
-      total: 89.98,
-      status: 'Delivered',
-      items: 2,
-      image: 'Order 2',
-    },
-    {
-      id: '#BLC003',
-      date: 'February 28, 2024',
-      total: 199.95,
-      status: 'Delivered',
-      items: 4,
-      image: 'Order 3',
-    },
-  ]
+  const [orders, setOrders] = useState<Order[]>([])
+  const [loading, setLoading] = useState(true)
 
-  const statusColors: Record<string, string> = {
-    'Pending': 'bg-yellow-50 text-yellow-700 border-yellow-200',
-    'Processing': 'bg-blue-50 text-blue-700 border-blue-200',
-    'Shipped': 'bg-blue-50 text-blue-700 border-blue-200',
-    'Delivered': 'bg-green-50 text-green-700 border-green-200',
-    'Cancelled': 'bg-red-50 text-red-700 border-red-200',
+  useEffect(() => {
+    fetch('/api/orders')
+      .then((res) => res.ok ? res.json() : [])
+      .then((data) => setOrders(Array.isArray(data) ? data : []))
+      .catch(() => setOrders([]))
+      .finally(() => setLoading(false))
+  }, [])
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black" />
+      </div>
+    )
   }
 
   return (
@@ -50,71 +80,78 @@ export default function OrdersPage() {
           <p className="text-sm text-gray-600 mb-6">
             Start shopping to see your orders here
           </p>
-          <a
-            href="/products"
-            className="inline-block btn-primary"
-          >
+          <Link href="/shop" className="inline-block btn-primary">
             Continue Shopping
-          </a>
+          </Link>
         </div>
       ) : (
         <div className="space-y-4">
           {orders.map((order) => (
-            <div
+            <Link
               key={order.id}
-              className="border border-gray-200 rounded-lg p-6 hover:bg-gray-50 transition-colors"
+              href={`/account/orders/${order.id}`}
+              className="block border border-gray-200 rounded-lg p-6 hover:bg-gray-50 transition-colors"
             >
               <div className="flex flex-col md:flex-row gap-6">
-                {/* Order Image */}
-                <div className="w-24 h-24 bg-gray-100 rounded-lg flex-shrink-0 flex items-center justify-center">
-                  <p className="text-xs text-gray-400">{order.image}</p>
-                </div>
-
-                {/* Order Details */}
                 <div className="flex-1">
                   <div className="flex flex-col md:flex-row md:items-start md:justify-between mb-4">
                     <div>
-                      <h3 className="font-bold text-lg mb-2">{order.id}</h3>
+                      <h3 className="font-bold text-lg mb-2">
+                        Order #{order.id.slice(-8).toUpperCase()}
+                      </h3>
                       <div className="flex flex-wrap gap-4 text-sm text-gray-600">
                         <div className="flex items-center gap-2">
                           <Calendar size={16} />
-                          <span>{order.date}</span>
+                          <span>{new Date(order.createdAt).toLocaleDateString()}</span>
                         </div>
                         <div className="flex items-center gap-2">
                           <Package size={16} />
-                          <span>{order.items} items</span>
+                          <span>
+                            {order.orderItems.reduce((sum, item) => sum + item.quantity, 0)} items
+                          </span>
                         </div>
                       </div>
                     </div>
 
-                    {/* Status Badge */}
-                    <div className={`px-3 py-1 rounded-full text-sm font-semibold border ${statusColors[order.status]}`}>
-                      {order.status}
+                    <div className="flex gap-2 mt-2 md:mt-0">
+                      <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${statusColors[order.status] || 'bg-gray-50 text-gray-700 border-gray-200'}`}>
+                        {order.status}
+                      </span>
+                      <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${paymentStatusColors[order.paymentStatus] || 'bg-gray-50 text-gray-600 border-gray-200'}`}>
+                        <CreditCard size={12} className="inline mr-1" />
+                        {order.paymentStatus}
+                      </span>
                     </div>
                   </div>
 
-                  {/* Order Amount */}
                   <div className="flex flex-col md:flex-row md:items-center md:justify-between">
                     <div className="flex items-center gap-2 mb-4 md:mb-0">
                       <DollarSign size={18} className="text-gray-600" />
-                      <span className="text-lg font-bold">${order.total.toFixed(2)}</span>
+                      <span className="text-lg font-bold">{formatPrice(order.totalAmount)}</span>
                     </div>
 
-                    {/* Action Buttons */}
                     <div className="flex gap-3">
-                      <button className="px-4 py-2 text-sm font-semibold border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors">
-                        View Details
-                      </button>
-                      {order.status === 'Delivered' && (
-                        <button className="px-4 py-2 text-sm font-semibold border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors">
-                          Reorder
-                        </button>
+                      {order.orderItems.slice(0, 3).map((item) => (
+                        <div key={item.id} className="w-12 h-12 bg-gray-100 rounded overflow-hidden">
+                          {item.productImage && (
+                            <img
+                              src={item.productImage.startsWith('/') ? item.productImage : `/${item.productImage}`}
+                              alt={item.productName}
+                              className="w-full h-full object-cover"
+                            />
+                          )}
+                        </div>
+                      ))}
+                      {order.orderItems.length > 3 && (
+                        <div className="w-12 h-12 bg-gray-100 rounded flex items-center justify-center text-xs text-gray-500">
+                          +{order.orderItems.length - 3}
+                        </div>
                       )}
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       )}
