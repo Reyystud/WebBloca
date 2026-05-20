@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { requireAdmin } from '@/lib/auth'
+import { handleApiError } from '@/lib/error-handler'
 
 export async function GET(request: Request) {
   try {
@@ -43,10 +44,6 @@ export async function GET(request: Request) {
 
     return NextResponse.json({ users, total, page, limit })
   } catch (error) {
-    if (error instanceof Error && (error.message === 'Unauthorized' || error.message === 'Forbidden')) {
-      return NextResponse.json({ error: error.message }, { status: error.message === 'Unauthorized' ? 401 : 403 })
-    }
-    console.error('Error fetching users:', error)
-    return NextResponse.json({ error: 'Failed to fetch users' }, { status: 500 })
+    return handleApiError(error)
   }
 }

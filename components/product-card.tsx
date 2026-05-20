@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { Heart, ShoppingCart } from 'lucide-react'
 import { useCart } from '@/context/cart-context'
+import { formatPrice } from '@/lib/format'
 
 interface ProductCardProps {
   id: string
@@ -69,7 +70,7 @@ export default function ProductCard({ id, name, price, image, isBestSeller }: Pr
             {name}
           </h3>
           <p className="text-xs font-medium text-gray-500">
-            ${price.toFixed(2)}
+            {formatPrice(price)}
           </p>
         </div>
         

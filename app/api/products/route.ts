@@ -1,53 +1,44 @@
 import { NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
+import { requireAdmin } from '@/lib/auth'
+import { handleApiError } from '@/lib/error-handler'
 
 export async function GET() {
   try {
     const products = await prisma.product.findMany({
+      where: { isDeleted: false },
       orderBy: { createdAt: 'desc' },
     })
     return NextResponse.json(products)
   } catch (error) {
-    console.error('Error fetching products:', error)
-    return NextResponse.json(
-      { error: 'Failed to fetch products' },
-      { status: 500 }
-    )
+    return handleApiError(error)
   }
 }
 
 export async function POST(request: Request) {
   try {
+    await requireAdmin()
     const body = await request.json()
-    const { name, price, image, category, subCategory, isSale, description, features, stock } = body
 
-    if (!name || price === undefined || !image || !category) {
-      return NextResponse.json(
-        { error: 'Name, price, image, and category are required' },
-        { status: 400 }
-      )
-    }
+    const { createProductSchema } = await import('@/lib/validations')
+    const data = createProductSchema.parse(body)
 
     const product = await prisma.product.create({
       data: {
-        name,
-        price: parseFloat(price),
-        image,
-        category,
-        subCategory: subCategory || null,
-        isSale: isSale || false,
-        description: description || null,
-        features: features ? JSON.stringify(features) : null,
-        stock: stock || 100,
+        name: data.name,
+        price: data.price,
+        image: data.image,
+        category: data.category,
+        subCategory: data.subCategory ?? null,
+        isSale: data.isSale,
+        description: data.description ?? null,
+        features: data.features ?? undefined,
+        stock: data.stock,
       },
     })
 
     return NextResponse.json(product, { status: 201 })
   } catch (error) {
-    console.error('Error creating product:', error)
-    return NextResponse.json(
-      { error: 'Failed to create product' },
-      { status: 500 }
-    )
+    return handleApiError(error)
   }
 }

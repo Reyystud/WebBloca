@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { requireAuth } from '@/lib/auth'
+import { handleApiError, ValidationError } from '@/lib/error-handler'
 
 export async function GET() {
   try {
@@ -9,25 +10,25 @@ export async function GET() {
     const orders = await prisma.order.findMany({
       where: { userId: user.id },
       include: {
-        orderItems: { include: { product: true } },
+        orderItems: true,
+        payments: true,
       },
       orderBy: { createdAt: 'desc' },
     })
 
     return NextResponse.json(orders)
   } catch (error) {
-    if (error instanceof Error && error.message === 'Unauthorized') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-    console.error('Error fetching orders:', error)
-    return NextResponse.json({ error: 'Failed to fetch orders' }, { status: 500 })
+    return handleApiError(error)
   }
 }
 
 export async function POST(request: Request) {
   try {
     const user = await requireAuth()
-    const { shippingAddress } = await request.json()
+    const body = await request.json()
+
+    const { createOrderSchema } = await import('@/lib/validations')
+    const data = createOrderSchema.parse(body)
 
     const cartItems = await prisma.cartItem.findMany({
       where: { userId: user.id },
@@ -35,44 +36,72 @@ export async function POST(request: Request) {
     })
 
     if (cartItems.length === 0) {
-      return NextResponse.json({ error: 'Cart is empty' }, { status: 400 })
+      throw new ValidationError('Cart is empty')
     }
 
-    const totalAmount = cartItems.reduce(
-      (sum, item) => sum + item.product.price * item.quantity,
-      0
-    )
+    for (const item of cartItems) {
+      if (item.product.isDeleted) {
+        throw new ValidationError(`Product "${item.product.name}" is no longer available`)
+      }
+      if (item.quantity > item.product.stock) {
+        throw new ValidationError(`Not enough stock for "${item.product.name}". Available: ${item.product.stock}`)
+      }
+    }
 
-    const order = await prisma.order.create({
-      data: {
-        userId: user.id,
-        totalAmount,
-        shippingAddress: shippingAddress || null,
-        orderItems: {
-          create: cartItems.map((item) => ({
-            productId: item.productId,
-            quantity: item.quantity,
-            priceAtPurchase: item.product.price,
-          })),
+    const result = await prisma.$transaction(async (tx) => {
+      const totalAmount = cartItems.reduce(
+        (sum, item) => sum + Number(item.product.price) * item.quantity,
+        0
+      )
+      const shippingCost = data.shippingCost ?? 0
+
+      for (const item of cartItems) {
+        const product = await tx.product.findUnique({ where: { id: item.productId } })
+        if (!product || product.stock < item.quantity) {
+          throw new ValidationError(`Not enough stock for "${item.product.name}"`)
+        }
+        await tx.product.update({
+          where: { id: item.productId },
+          data: { stock: { decrement: item.quantity } },
+        })
+      }
+
+      const order = await tx.order.create({
+        data: {
+          userId: user.id,
+          totalAmount,
+          shippingCost,
+          shippingName: data.shippingAddress.shippingName,
+          shippingPhone: data.shippingAddress.shippingPhone,
+          shippingAddress: data.shippingAddress.shippingAddress,
+          shippingCity: data.shippingAddress.shippingCity,
+          shippingProvince: data.shippingAddress.shippingProvince,
+          shippingPostalCode: data.shippingAddress.shippingPostalCode,
+          orderItems: {
+            create: cartItems.map((item) => ({
+              productId: item.productId,
+              productName: item.product.name,
+              productImage: item.product.image,
+              quantity: item.quantity,
+              priceAtPurchase: item.product.price,
+            })),
+          },
         },
-      },
-      include: { orderItems: { include: { product: true } } },
+        include: { orderItems: true },
+      })
+
+      await tx.cartItem.deleteMany({ where: { userId: user.id } })
+
+      await tx.user.update({
+        where: { id: user.id },
+        data: { points: { increment: Math.floor(totalAmount) } },
+      })
+
+      return order
     })
 
-    await prisma.cartItem.deleteMany({ where: { userId: user.id } })
-
-    // Award points: 1 point per dollar spent
-    await prisma.user.update({
-      where: { id: user.id },
-      data: { points: { increment: Math.floor(totalAmount) } },
-    })
-
-    return NextResponse.json(order, { status: 201 })
+    return NextResponse.json(result, { status: 201 })
   } catch (error) {
-    if (error instanceof Error && error.message === 'Unauthorized') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-    console.error('Error creating order:', error)
-    return NextResponse.json({ error: 'Failed to create order' }, { status: 500 })
+    return handleApiError(error)
   }
 }

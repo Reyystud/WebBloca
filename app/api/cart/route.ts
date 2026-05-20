@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { requireAuth } from '@/lib/auth'
+import { handleApiError, NotFoundError, ValidationError } from '@/lib/error-handler'
 
 export async function GET() {
   try {
@@ -21,58 +22,67 @@ export async function GET() {
 
     return NextResponse.json(formatted)
   } catch (error) {
-    if (error instanceof Error && error.message === 'Unauthorized') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-    console.error('Error fetching cart:', error)
-    return NextResponse.json({ error: 'Failed to fetch cart' }, { status: 500 })
+    return handleApiError(error)
   }
 }
 
 export async function POST(request: Request) {
   try {
     const user = await requireAuth()
-    const { productId, quantity } = await request.json()
+    const body = await request.json()
 
-    if (!productId) {
-      return NextResponse.json({ error: 'productId is required' }, { status: 400 })
+    const { addToCartSchema } = await import('@/lib/validations')
+    const data = addToCartSchema.parse(body)
+
+    const product = await prisma.product.findUnique({ where: { id: data.productId } })
+    if (!product || product.isDeleted) {
+      throw new NotFoundError('Product not found')
     }
 
-    const product = await prisma.product.findUnique({ where: { id: productId } })
-    if (!product) {
-      return NextResponse.json({ error: 'Product not found' }, { status: 404 })
+    if (product.stock < 1) {
+      throw new ValidationError('Product is out of stock')
+    }
+
+    const existingCartItem = await prisma.cartItem.findUnique({
+      where: { userId_productId: { userId: user.id, productId: data.productId } },
+    })
+
+    if (existingCartItem) {
+      const newQuantity = existingCartItem.quantity + data.quantity
+      if (newQuantity > product.stock) {
+        throw new ValidationError(`Only ${product.stock} items available. You already have ${existingCartItem.quantity} in your cart.`)
+      }
     }
 
     const cartItem = await prisma.cartItem.upsert({
       where: {
-        userId_productId: { userId: user.id, productId },
+        userId_productId: { userId: user.id, productId: data.productId },
       },
-      update: { quantity: { increment: quantity || 1 } },
+      update: { quantity: { increment: data.quantity } },
       create: {
         userId: user.id,
-        productId,
-        quantity: quantity || 1,
+        productId: data.productId,
+        quantity: data.quantity,
       },
     })
 
     return NextResponse.json(cartItem)
   } catch (error) {
-    if (error instanceof Error && error.message === 'Unauthorized') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-    console.error('Error adding to cart:', error)
-    return NextResponse.json({ error: 'Failed to add to cart' }, { status: 500 })
+    return handleApiError(error)
   }
 }
 
 export async function DELETE(request: Request) {
   try {
     const user = await requireAuth()
-    const { productId } = await request.json()
+    const body = await request.json()
 
-    if (productId) {
+    const { removeFromCartSchema } = await import('@/lib/validations')
+    const data = removeFromCartSchema.parse(body)
+
+    if (data.productId) {
       await prisma.cartItem.deleteMany({
-        where: { userId: user.id, productId },
+        where: { userId: user.id, productId: data.productId },
       })
     } else {
       await prisma.cartItem.deleteMany({
@@ -82,10 +92,6 @@ export async function DELETE(request: Request) {
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    if (error instanceof Error && error.message === 'Unauthorized') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-    console.error('Error removing from cart:', error)
-    return NextResponse.json({ error: 'Failed to remove from cart' }, { status: 500 })
+    return handleApiError(error)
   }
 }

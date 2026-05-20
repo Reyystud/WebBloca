@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Plus, Search, Edit, Trash2 } from 'lucide-react'
+import { formatPrice } from '@/lib/format'
 
 interface Product {
   id: string
@@ -142,7 +143,7 @@ export default function AdminProductsPage() {
                     <div className="text-sm">{product.category}</div>
                     {product.subCategory && <div className="text-xs text-gray-400">{product.subCategory}</div>}
                   </td>
-                  <td className="px-6 py-4 text-sm font-medium">${product.price.toFixed(2)}</td>
+                  <td className="px-6 py-4 text-sm font-medium">{formatPrice(product.price)}</td>
                   <td className="px-6 py-4 text-sm">{product.stock}</td>
                   <td className="px-6 py-4">
                     {product.isSale ? (

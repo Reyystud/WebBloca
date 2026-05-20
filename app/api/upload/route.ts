@@ -1,14 +1,29 @@
 import { NextResponse } from 'next/server'
 import { writeFile, mkdir } from 'fs/promises'
 import path from 'path'
+import { requireAdmin } from '@/lib/auth'
+import { handleApiError, ValidationError } from '@/lib/error-handler'
+
+const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
+const MAX_SIZE = 5 * 1024 * 1024
 
 export async function POST(request: Request) {
   try {
+    await requireAdmin()
+
     const formData = await request.formData()
     const file = formData.get('file') as File | null
 
     if (!file) {
-      return NextResponse.json({ error: 'No file provided' }, { status: 400 })
+      throw new ValidationError('No file provided')
+    }
+
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      throw new ValidationError('Invalid file type. Allowed: JPEG, PNG, WebP, GIF')
+    }
+
+    if (file.size > MAX_SIZE) {
+      throw new ValidationError('File too large. Maximum size: 5MB')
     }
 
     const bytes = await file.arrayBuffer()
@@ -26,7 +41,6 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ url: `/uploads/${filename}` }, { status: 201 })
   } catch (error) {
-    console.error('Error uploading file:', error)
-    return NextResponse.json({ error: 'Failed to upload file' }, { status: 500 })
+    return handleApiError(error)
   }
 }

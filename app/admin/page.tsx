@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { DollarSign, ShoppingBag, Users, Package, TrendingUp, Clock } from 'lucide-react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
+import { formatPrice } from '@/lib/format'
 
 interface DashboardStats {
   totalRevenue: number
@@ -45,7 +46,7 @@ export default function AdminDashboard() {
   }
 
   const statCards = [
-    { label: 'Total Revenue', value: `$${stats.totalRevenue.toFixed(2)}`, icon: DollarSign, color: 'bg-green-50 text-green-600' },
+    { label: 'Total Revenue', value: formatPrice(stats.totalRevenue), icon: DollarSign, color: 'bg-green-50 text-green-600' },
     { label: 'Total Orders', value: stats.totalOrders.toString(), icon: ShoppingBag, color: 'bg-blue-50 text-blue-600' },
     { label: 'Total Users', value: stats.totalUsers.toString(), icon: Users, color: 'bg-purple-50 text-purple-600' },
     { label: 'Total Products', value: stats.totalProducts.toString(), icon: Package, color: 'bg-orange-50 text-orange-600' },
@@ -132,7 +133,7 @@ export default function AdminDashboard() {
                     <td className="py-3 text-sm text-gray-600">
                       {order.user?.name || order.user?.email || 'Unknown'}
                     </td>
-                    <td className="py-3 text-sm font-medium">${order.totalAmount.toFixed(2)}</td>
+                    <td className="py-3 text-sm font-medium">{formatPrice(order.totalAmount)}</td>
                     <td className="py-3">
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusColors[order.status] || 'bg-gray-100 text-gray-700'}`}>
                         {order.status}

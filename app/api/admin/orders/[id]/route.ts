@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { requireAdmin } from '@/lib/auth'
+import { handleApiError } from '@/lib/error-handler'
 
 export async function GET(
   _request: Request,
@@ -14,21 +15,19 @@ export async function GET(
       where: { id },
       include: {
         user: true,
-        orderItems: { include: { product: true } },
+        orderItems: true,
+        payments: true,
       },
     })
 
     if (!order) {
-      return NextResponse.json({ error: 'Order not found' }, { status: 404 })
+      const { NotFoundError } = await import('@/lib/error-handler')
+      throw new NotFoundError('Order not found')
     }
 
     return NextResponse.json(order)
   } catch (error) {
-    if (error instanceof Error && (error.message === 'Unauthorized' || error.message === 'Forbidden')) {
-      return NextResponse.json({ error: error.message }, { status: error.message === 'Unauthorized' ? 401 : 403 })
-    }
-    console.error('Error fetching order:', error)
-    return NextResponse.json({ error: 'Failed to fetch order' }, { status: 500 })
+    return handleApiError(error)
   }
 }
 
@@ -41,24 +40,28 @@ export async function PUT(
     const { id } = await params
     const body = await request.json()
 
+    const { updateOrderStatusSchema } = await import('@/lib/validations')
+    const data = updateOrderStatusSchema.parse(body)
+
     const order = await prisma.order.update({
       where: { id },
       data: {
-        ...(body.status && { status: body.status }),
-        ...(body.shippingAddress !== undefined && { shippingAddress: body.shippingAddress }),
+        ...(data.status && { status: data.status }),
+        ...(data.paymentStatus && { paymentStatus: data.paymentStatus }),
+        ...(data.trackingNumber !== undefined && { trackingNumber: data.trackingNumber }),
+        ...(data.trackingProvider !== undefined && { trackingProvider: data.trackingProvider }),
+        ...(data.shippingAddress !== undefined && { shippingAddress: data.shippingAddress }),
+        ...(data.paymentStatus === 'PAID' && { paymentPaidAt: new Date() }),
       },
       include: {
         user: true,
-        orderItems: { include: { product: true } },
+        orderItems: true,
+        payments: true,
       },
     })
 
     return NextResponse.json(order)
   } catch (error) {
-    if (error instanceof Error && (error.message === 'Unauthorized' || error.message === 'Forbidden')) {
-      return NextResponse.json({ error: error.message }, { status: error.message === 'Unauthorized' ? 401 : 403 })
-    }
-    console.error('Error updating order:', error)
-    return NextResponse.json({ error: 'Failed to update order' }, { status: 500 })
+    return handleApiError(error)
   }
 }

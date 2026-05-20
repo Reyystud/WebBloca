@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { requireAdmin } from '@/lib/auth'
+import { handleApiError } from '@/lib/error-handler'
 
 export async function GET() {
   try {
@@ -13,19 +14,24 @@ export async function GET() {
       totalProducts,
       recentOrders,
       ordersByStatus,
+      ordersByPaymentStatus,
     ] = await Promise.all([
       prisma.order.aggregate({ _sum: { totalAmount: true } }),
       prisma.order.count(),
       prisma.user.count(),
-      prisma.product.count(),
+      prisma.product.count({ where: { isDeleted: false } }),
       prisma.order.findMany({
         take: 10,
         orderBy: { createdAt: 'desc' },
-        include: { orderItems: { include: { product: true } }, user: true },
+        include: { orderItems: true, user: { select: { id: true, name: true, email: true } } },
       }),
       prisma.order.groupBy({
         by: ['status'],
         _count: { status: true },
+      }),
+      prisma.order.groupBy({
+        by: ['paymentStatus'],
+        _count: { paymentStatus: true },
       }),
     ])
 
@@ -36,12 +42,9 @@ export async function GET() {
       totalProducts,
       recentOrders,
       ordersByStatus,
+      ordersByPaymentStatus,
     })
   } catch (error) {
-    if (error instanceof Error && (error.message === 'Unauthorized' || error.message === 'Forbidden')) {
-      return NextResponse.json({ error: error.message }, { status: error.message === 'Unauthorized' ? 401 : 403 })
-    }
-    console.error('Error fetching dashboard stats:', error)
-    return NextResponse.json({ error: 'Failed to fetch dashboard stats' }, { status: 500 })
+    return handleApiError(error)
   }
 }

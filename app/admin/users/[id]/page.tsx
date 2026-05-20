@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
+import { formatPrice } from '@/lib/format'
 
 interface UserDetail {
   id: string
@@ -124,7 +125,7 @@ export default function AdminUserDetailPage() {
                       <p className="text-xs text-gray-500">{new Date(order.createdAt).toLocaleDateString()}</p>
                     </div>
                     <div className="text-right">
-                      <p className="text-sm font-medium">${order.totalAmount.toFixed(2)}</p>
+                      <p className="text-sm font-medium">{formatPrice(order.totalAmount)}</p>
                       <p className="text-xs text-gray-500">{order.status}</p>
                     </div>
                   </div>

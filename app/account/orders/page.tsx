@@ -1,23 +1,33 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Package, Calendar, DollarSign, ShoppingBag } from 'lucide-react'
+import { Package, Calendar, DollarSign, CreditCard } from 'lucide-react'
 import Link from 'next/link'
+import { formatPrice } from '@/lib/format'
 
 interface OrderItem {
   id: string
+  productName: string
+  productImage: string
   quantity: number
   priceAtPurchase: number
-  product: { id: string; name: string; image: string }
+}
+
+interface Payment {
+  id: string
+  paymentStatus: string
+  paymentMethod: string | null
 }
 
 interface Order {
   id: string
   status: string
+  paymentStatus: string
   totalAmount: number
-  shippingAddress: string | null
+  shippingCost: number
   createdAt: string
   orderItems: OrderItem[]
+  payments: Payment[]
 }
 
 const statusColors: Record<string, string> = {
@@ -26,6 +36,15 @@ const statusColors: Record<string, string> = {
   SHIPPED: 'bg-indigo-50 text-indigo-700 border-indigo-200',
   DELIVERED: 'bg-green-50 text-green-700 border-green-200',
   CANCELLED: 'bg-red-50 text-red-700 border-red-200',
+}
+
+const paymentStatusColors: Record<string, string> = {
+  UNPAID: 'bg-gray-50 text-gray-600 border-gray-200',
+  PENDING: 'bg-yellow-50 text-yellow-700 border-yellow-200',
+  PAID: 'bg-green-50 text-green-700 border-green-200',
+  FAILED: 'bg-red-50 text-red-700 border-red-200',
+  REFUNDED: 'bg-orange-50 text-orange-700 border-orange-200',
+  EXPIRED: 'bg-gray-50 text-gray-500 border-gray-200',
 }
 
 export default function OrdersPage() {
@@ -68,16 +87,17 @@ export default function OrdersPage() {
       ) : (
         <div className="space-y-4">
           {orders.map((order) => (
-            <div
+            <Link
               key={order.id}
-              className="border border-gray-200 rounded-lg p-6 hover:bg-gray-50 transition-colors"
+              href={`/account/orders/${order.id}`}
+              className="block border border-gray-200 rounded-lg p-6 hover:bg-gray-50 transition-colors"
             >
               <div className="flex flex-col md:flex-row gap-6">
                 <div className="flex-1">
                   <div className="flex flex-col md:flex-row md:items-start md:justify-between mb-4">
                     <div>
                       <h3 className="font-bold text-lg mb-2">
-                        {order.id.slice(0, 12)}...
+                        Order #{order.id.slice(-8).toUpperCase()}
                       </h3>
                       <div className="flex flex-wrap gap-4 text-sm text-gray-600">
                         <div className="flex items-center gap-2">
@@ -93,25 +113,33 @@ export default function OrdersPage() {
                       </div>
                     </div>
 
-                    <div className={`px-3 py-1 rounded-full text-sm font-semibold border ${statusColors[order.status] || 'bg-gray-50 text-gray-700 border-gray-200'}`}>
-                      {order.status}
+                    <div className="flex gap-2 mt-2 md:mt-0">
+                      <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${statusColors[order.status] || 'bg-gray-50 text-gray-700 border-gray-200'}`}>
+                        {order.status}
+                      </span>
+                      <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${paymentStatusColors[order.paymentStatus] || 'bg-gray-50 text-gray-600 border-gray-200'}`}>
+                        <CreditCard size={12} className="inline mr-1" />
+                        {order.paymentStatus}
+                      </span>
                     </div>
                   </div>
 
                   <div className="flex flex-col md:flex-row md:items-center md:justify-between">
                     <div className="flex items-center gap-2 mb-4 md:mb-0">
                       <DollarSign size={18} className="text-gray-600" />
-                      <span className="text-lg font-bold">${order.totalAmount.toFixed(2)}</span>
+                      <span className="text-lg font-bold">{formatPrice(order.totalAmount)}</span>
                     </div>
 
                     <div className="flex gap-3">
                       {order.orderItems.slice(0, 3).map((item) => (
                         <div key={item.id} className="w-12 h-12 bg-gray-100 rounded overflow-hidden">
-                          <img
-                            src={item.product.image?.startsWith('/') ? item.product.image : `/${item.product.image}`}
-                            alt={item.product.name}
-                            className="w-full h-full object-cover"
-                          />
+                          {item.productImage && (
+                            <img
+                              src={item.productImage.startsWith('/') ? item.productImage : `/${item.productImage}`}
+                              alt={item.productName}
+                              className="w-full h-full object-cover"
+                            />
+                          )}
                         </div>
                       ))}
                       {order.orderItems.length > 3 && (
@@ -123,7 +151,7 @@ export default function OrdersPage() {
                   </div>
                 </div>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       )}

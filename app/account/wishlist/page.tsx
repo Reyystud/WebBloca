@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { Heart, Trash2, ShoppingBag } from 'lucide-react'
 import { useCart } from '@/context/cart-context'
 import Link from 'next/link'
+import { formatPrice } from '@/lib/format'
 
 interface WishlistItem {
   id: string
@@ -72,7 +73,7 @@ export default function WishlistPage() {
               </p>
 
               <p className="text-2xl font-bold mb-6">
-                ${item.product.price.toFixed(2)}
+                {formatPrice(item.product.price)}
               </p>
 
               <div className="flex gap-3 mt-auto">

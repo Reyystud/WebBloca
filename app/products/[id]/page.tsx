@@ -6,6 +6,7 @@ import { Plus, Minus, ShieldCheck, CreditCard, RotateCcw, Heart } from 'lucide-r
 import { ALL_PRODUCTS, getProductById, type Product } from '@/lib/products'
 import ProductCard from '@/components/product-card'
 import { useCart } from '@/context/cart-context'
+import { formatPrice } from '@/lib/format'
 
 export default function ProductDetailPage() {
   const { id } = useParams()
@@ -78,7 +79,7 @@ export default function ProductDetailPage() {
               {product.name}
             </h1>
             <p className="text-2xl font-medium text-gray-900 mb-8">
-              ${product.price.toFixed(2)}
+              {formatPrice(product.price)}
             </p>
 
             {/* Size Selector */}
@@ -129,7 +130,7 @@ export default function ProductDetailPage() {
             {/* Payment Info */}
             <div className="bg-gray-50 p-4 mb-10 text-center">
               <p className="text-[10px] text-gray-500 tracking-wide">
-                Pay in 4 interest-free payments of ${(product.price / 4).toFixed(2)} with <span className="font-bold text-black italic">Afterpay</span>
+                Pay in 4 interest-free payments of {formatPrice(Number(product.price) / 4)} with <span className="font-bold text-black italic">Afterpay</span>
               </p>
             </div>
 
@@ -166,7 +167,7 @@ export default function ProductDetailPage() {
                         <img src={p.image.startsWith('/') ? p.image : `/${p.image}`} alt={p.name} className="w-full h-full object-cover" />
                       </div>
                       <h4 className="text-[10px] font-bold uppercase tracking-widest mb-1 truncate">{p.name}</h4>
-                      <p className="text-xs text-gray-500 mb-3">${p.price.toFixed(2)}</p>
+                      <p className="text-xs text-gray-500 mb-3">{formatPrice(p.price)}</p>
                       <button 
                         onClick={() => addItem({ id: p.id, name: p.name, price: p.price, image: p.image })}
                         className="w-full border border-black py-2 text-[9px] font-bold uppercase tracking-widest hover:bg-black hover:text-white transition-all"
