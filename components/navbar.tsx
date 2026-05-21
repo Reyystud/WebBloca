@@ -27,7 +27,7 @@ export default function Navbar() {
         isScrolled ? 'bg-white shadow-sm' : 'bg-transparent'
       }`}
     >
-      <div className="max-w-7xl mx-auto px-6 sm:px-8 md:px-12 h-16 flex items-center justify-between">
+      <div className="max-w-7xl mx-auto px-4 sm:px-8 md:px-12 h-16 flex items-center justify-between">
         <Link
           href="/"
           className="text-2xl font-bold tracking-tighter hover:opacity-75 transition-opacity"

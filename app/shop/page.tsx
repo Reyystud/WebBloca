@@ -83,7 +83,7 @@ export default function ShopPage() {
 
       {/* Brand Selection Navbar */}
       <div className="flex justify-center border-b border-gray-100 bg-white sticky top-[64px] z-30">
-        <div className="flex gap-16 py-4">
+        <div className="flex gap-8 sm:gap-16 py-4">
           <button 
             onClick={() => handleBrandChange('BLOCA')}
             className={`text-[11px] font-bold tracking-[0.2em] uppercase transition-all relative py-2 ${
