@@ -1,6 +1,6 @@
 'use client'
 
-import React, { createContext, useContext, useEffect, useState, useCallback } from 'react'
+import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react'
 import type { User } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/client'
 
@@ -31,16 +31,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [loading, setLoading] = useState(true)
+  const [supabase, setSupabase] = useState<ReturnType<typeof createClient> | null>(null)
 
-  const [supabase] = useState(() => {
-    if (typeof window === 'undefined') return null
+  useEffect(() => {
     try {
-      return createClient()
+      setSupabase(createClient())
     } catch {
       console.error('Failed to initialize Supabase client. Check your environment variables.')
-      return null
+      setLoading(false)
     }
-  })
+  }, [])
 
   const fetchProfile = useCallback(async (userId: string) => {
     if (!supabase) return
@@ -55,10 +55,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setProfile(data as UserProfile)
       }
     } catch {
-      // Profile may not exist yet - try to create via API
       try {
         await fetch('/api/auth', { method: 'POST' })
-        // Retry fetch after creating profile
         const { data: retryData } = await supabase
           .from('users')
           .select('id, email, name, phone, address, role, points, tier')
@@ -68,7 +66,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setProfile(retryData as UserProfile)
         }
       } catch {
-        // Give up silently
       }
     }
   }, [supabase])
@@ -80,34 +77,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [user, fetchProfile])
 
   useEffect(() => {
-    if (!supabase) {
+    if (!supabase) return
+
+    const timeout = setTimeout(() => {
       setLoading(false)
-      return
-    }
+    }, 5000)
 
-    let mounted = true
-
-    // Listen for auth changes FIRST (this is more reliable than getUser)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event: string, session: any) => {
-        if (!mounted) return
+        clearTimeout(timeout)
 
         const currentUser = session?.user ?? null
         setUser(currentUser)
+        setLoading(false)
 
         if (currentUser) {
-          // Fetch profile, ensure it exists
-          await fetchProfile(currentUser.id)
+          fetchProfile(currentUser.id)
         } else {
           setProfile(null)
         }
-
-        setLoading(false)
       }
     )
 
     return () => {
-      mounted = false
+      clearTimeout(timeout)
       subscription.unsubscribe()
     }
   }, [supabase, fetchProfile])
