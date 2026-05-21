@@ -7,15 +7,10 @@ export function createClient() {
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
   if (!supabaseUrl || !supabaseAnonKey) {
-    // Return a mock client that won't throw but also won't work
-    // until environment variables are configured
-    if (!supabaseClient) {
-      supabaseClient = createBrowserClient(
-        'https://placeholder.supabase.co',
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBsYWNlaG9sZGVyIiwicm9sZSI6ImFub24iLCJpYXQiOjE2NDYzNjEwMTMsImV4cCI6MTk2MTkzNzAxM30.placeholder'
-      )
-    }
-    return supabaseClient
+    throw new Error(
+      'Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY. ' +
+      'Check your .env.local file and restart the dev server.'
+    )
   }
 
   if (!supabaseClient) {

@@ -32,7 +32,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [loading, setLoading] = useState(true)
 
-  const supabase = typeof window !== 'undefined' ? createClient() : null
+  const [supabase] = useState(() => {
+    if (typeof window === 'undefined') return null
+    try {
+      return createClient()
+    } catch {
+      console.error('Failed to initialize Supabase client. Check your environment variables.')
+      return null
+    }
+  })
 
   const fetchProfile = useCallback(async (userId: string) => {
     if (!supabase) return

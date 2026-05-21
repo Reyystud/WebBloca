@@ -11,7 +11,6 @@ export async function proxy(request: NextRequest) {
     return response
   }
 
-  // Refresh auth session
   const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
     cookies: {
       getAll() {
@@ -30,17 +29,19 @@ export async function proxy(request: NextRequest) {
   })
 
   try {
-    const { data: { user } } = await supabase.auth.getUser()
+    await supabase.auth.getUser()
 
-    // Protect /account routes - redirect to login if not authenticated
-    if (request.nextUrl.pathname.startsWith('/account') && !user) {
-      const url = request.nextUrl.clone()
-      url.pathname = '/auth/login'
-      return NextResponse.redirect(url)
+    if (request.nextUrl.pathname.startsWith('/account')) {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) {
+        const url = request.nextUrl.clone()
+        url.pathname = '/auth/login'
+        return NextResponse.redirect(url)
+      }
     }
 
-    // Protect /admin routes - redirect to home if not admin
     if (request.nextUrl.pathname.startsWith('/admin')) {
+      const { data: { user } } = await supabase.auth.getUser()
       if (!user) {
         const url = request.nextUrl.clone()
         url.pathname = '/auth/login'
@@ -68,7 +69,6 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    '/account/:path*',
-    '/admin/:path*',
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 }

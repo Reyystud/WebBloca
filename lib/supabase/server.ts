@@ -1,12 +1,16 @@
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co'
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-key'
-const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 'placeholder-key'
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
 export async function createClient() {
   const cookieStore = await cookies()
+
+  if (!supabaseUrl || !supabaseAnonKey) {
+    throw new Error('Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY env vars')
+  }
 
   return createServerClient(supabaseUrl, supabaseAnonKey, {
     cookies: {
@@ -28,6 +32,10 @@ export async function createClient() {
 }
 
 export async function createAdminClient() {
+  if (!supabaseUrl || !supabaseServiceRoleKey) {
+    throw new Error('Missing SUPABASE env vars for admin client')
+  }
+
   return createServerClient(supabaseUrl, supabaseServiceRoleKey, {
     cookies: {
       getAll() {
