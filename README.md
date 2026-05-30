@@ -150,6 +150,8 @@ proxy.ts                  # Next.js 16 auth proxy (route protection)
 
 ## Available Scripts
 
+
+
 | Script | Description |
 |--------|-------------|
 | `npm run dev` | Start development server |

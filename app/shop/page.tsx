@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, Suspense } from 'react'
+import { useSearchParams } from 'next/navigation'
 import ProductCard from '@/components/product-card'
 import { ChevronRight } from 'lucide-react'
 import { ALL_PRODUCTS } from '@/lib/products'
@@ -27,10 +28,34 @@ const SUB_CATEGORIES: Record<string, string[]> = {
   'Keychain': ['Silver', 'Beaded']
 }
 
-export default function ShopPage() {
+function ShopContent() {
+  const searchParams = useSearchParams()
   const [selectedCategory, setSelectedCategory] = useState('All item')
   const [selectedSubCategory, setSelectedSubCategory] = useState<string | null>(null)
   const [brand, setBrand] = useState('BLOCA')
+
+  useEffect(() => {
+    const category = searchParams.get('category')
+    const subcategory = searchParams.get('subcategory')
+
+    if (category) {
+      // Find the actual case-sensitive category name
+      const matchedCategory = BLOCA_CATEGORIES.find(c => c.toLowerCase() === category.toLowerCase())
+      if (matchedCategory) {
+        setSelectedCategory(matchedCategory)
+      } else if (category.toLowerCase() === 'sale') {
+        setSelectedCategory('Sale item')
+      }
+    } else {
+      setSelectedCategory('All item')
+    }
+
+    if (subcategory) {
+      setSelectedSubCategory(subcategory)
+    } else {
+      setSelectedSubCategory(null)
+    }
+  }, [searchParams])
 
   const handleBrandChange = (newBrand: string) => {
     setBrand(newBrand)
@@ -63,7 +88,7 @@ export default function ShopPage() {
     if (!matchesCategory) return false
 
     if (selectedSubCategory) {
-      return product.subCategory === selectedSubCategory
+      return product.subCategory?.toLowerCase() === selectedSubCategory.toLowerCase()
     }
 
     return true
@@ -226,5 +251,13 @@ export default function ShopPage() {
         }
       `}</style>
     </div>
+  )
+}
+
+export default function ShopPage() {
+  return (
+    <Suspense fallback={<div className="pt-32 text-center">Loading shop...</div>}>
+      <ShopContent />
+    </Suspense>
   )
 }
