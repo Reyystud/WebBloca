@@ -3,10 +3,24 @@ import prisma from '@/lib/prisma'
 import { requireAdmin } from '@/lib/auth'
 import { handleApiError } from '@/lib/error-handler'
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    const { searchParams } = new URL(request.url)
+    const search = searchParams.get('search')
+
+    const where: any = { isDeleted: false }
+
+    if (search) {
+      where.OR = [
+        { name: { contains: search, mode: 'insensitive' } },
+        { description: { contains: search, mode: 'insensitive' } },
+        { category: { contains: search, mode: 'insensitive' } },
+        { subCategory: { contains: search, mode: 'insensitive' } },
+      ]
+    }
+
     const products = await prisma.product.findMany({
-      where: { isDeleted: false },
+      where,
       orderBy: { createdAt: 'desc' },
     })
     return NextResponse.json(products)

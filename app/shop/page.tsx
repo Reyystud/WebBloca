@@ -32,11 +32,15 @@ function ShopContent() {
   const searchParams = useSearchParams()
   const [selectedCategory, setSelectedCategory] = useState('All item')
   const [selectedSubCategory, setSelectedSubCategory] = useState<string | null>(null)
+  const [searchQuery, setSearchQuery] = useState<string | null>(null)
   const [brand, setBrand] = useState('BLOCA')
 
   useEffect(() => {
     const category = searchParams.get('category')
     const subcategory = searchParams.get('subcategory')
+    const search = searchParams.get('search')
+
+    setSearchQuery(search)
 
     if (category) {
       // Find the actual case-sensitive category name
@@ -76,6 +80,21 @@ function ShopContent() {
   const currentCategories = brand === 'BLOCA' ? BLOCA_CATEGORIES : BLOCA_HOMME_CATEGORIES
 
   const filteredProducts = brand === 'BLOCA HOMME' ? [] : ALL_PRODUCTS.filter(product => {
+    // If there's a search query, prioritize it and ignore category/brand filters for now
+    // OR should it be search WITHIN the category? Usually search is global.
+    // The PRD says "search from any page", so global search makes sense.
+    
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase()
+      const matchesSearch = 
+        product.name.toLowerCase().includes(query) ||
+        product.description?.toLowerCase().includes(query) ||
+        product.category.toLowerCase().includes(query) ||
+        product.subCategory?.toLowerCase().includes(query)
+      
+      if (!matchesSearch) return false
+    }
+
     let matchesCategory = false
     if (selectedCategory === 'All item') {
       matchesCategory = true
@@ -192,9 +211,9 @@ function ShopContent() {
             <header className="mb-12">
               <div className="flex items-baseline gap-4">
                 <h1 className="text-3xl font-light tracking-tight text-gray-900 capitalize">
-                  {brand === 'BLOCA HOMME' ? `HOMME ${selectedCategory.toLowerCase()}` : selectedCategory.toLowerCase()}
+                  {searchQuery ? `Search: ${searchQuery}` : (brand === 'BLOCA HOMME' ? `HOMME ${selectedCategory.toLowerCase()}` : selectedCategory.toLowerCase())}
                 </h1>
-                {brand !== 'BLOCA HOMME' && selectedSubCategory && (
+                {!searchQuery && brand !== 'BLOCA HOMME' && selectedSubCategory && (
                   <>
                     <span className="text-gray-300 text-2xl font-thin">/</span>
                     <span className="text-xl font-light text-gray-500">{selectedSubCategory}</span>
@@ -221,13 +240,15 @@ function ShopContent() {
             ) : (
               <div className="py-32 flex flex-col items-center justify-center border border-dashed border-gray-100 rounded-2xl">
                 <p className="text-gray-400 font-light italic text-center px-4">
-                  {brand === 'BLOCA HOMME' 
-                    ? `The BLOCA HOMME ${selectedCategory.toLowerCase()} collection is coming soon.` 
-                    : 'No products available in this selection.'}
+                  {searchQuery 
+                    ? `No products found for "${searchQuery}".`
+                    : (brand === 'BLOCA HOMME' 
+                        ? `The BLOCA HOMME ${selectedCategory.toLowerCase()} collection is coming soon.` 
+                        : 'No products available in this selection.')}
                 </p>
-                {brand !== 'BLOCA HOMME' && (
+                {(brand !== 'BLOCA HOMME' || searchQuery) && (
                   <button 
-                    onClick={() => {setSelectedCategory('All item'); setSelectedSubCategory(null);}}
+                    onClick={() => {setSelectedCategory('All item'); setSelectedSubCategory(null); setSearchQuery(null);}}
                     className="mt-4 text-xs underline underline-offset-4 text-gray-900 hover:opacity-60 transition-opacity"
                   >
                     View all products
