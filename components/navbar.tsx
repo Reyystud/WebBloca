@@ -117,24 +117,26 @@ export default function Navbar() {
         setIsOverlayOpen(false)
       }}
     >
-      <div className="max-w-[1400px] mx-auto px-6 h-full flex items-center justify-between relative z-10 bg-white">
-        {/* Logo */}
-        <Link
-          href="/"
-          className={cn(
-            "text-2xl font-black tracking-tighter hover:opacity-75 transition-all duration-300",
-            isSearchActive ? "w-0 opacity-0 overflow-hidden pointer-events-none" : "w-auto opacity-100"
-          )}
-          onClick={closeSearch}
-        >
-          BLOCA.
-        </Link>
+      <div className="w-full px-6 sm:px-10 h-full flex items-center relative z-10 bg-white">
+        {/* Kolom Kiri - Logo */}
+        <div className="flex-1 flex justify-start items-center">
+          <Link
+            href="/"
+            className={cn(
+              "text-2xl font-black tracking-tighter hover:opacity-75 transition-all duration-300",
+              isSearchActive ? "opacity-0 invisible w-0" : "opacity-100 visible"
+            )}
+            onClick={closeSearch}
+          >
+            BLOCA.
+          </Link>
+        </div>
 
-        {/* Desktop Navigation & Search Bar */}
-        <div className="flex-1 flex items-center justify-center h-full px-8">
+        {/* Kolom Tengah - Navigation & Search Bar */}
+        <div className="flex-none flex items-center justify-center h-full">
           {isSearchActive ? (
             <div 
-              className="w-full max-w-2xl flex items-center gap-4 transition-all duration-300"
+              className="w-screen max-w-2xl px-4 flex items-center gap-4 transition-all duration-300"
               onMouseEnter={() => setIsOverlayOpen(true)}
             >
               <Search size={18} className="text-gray-400 shrink-0" />
@@ -158,6 +160,14 @@ export default function Navbar() {
             </div>
           ) : (
             <div className="hidden lg:flex items-center gap-1">
+              <Link 
+                href="/shop"
+                className="px-4 h-full flex items-center text-[11px] font-bold tracking-[0.2em] hover:text-gray-500 transition-colors"
+                onClick={closeSearch}
+              >
+                ALL PRODUCTS
+              </Link>
+
               <Link 
                 href="/shop"
                 className="px-4 h-full flex items-center text-[11px] font-bold tracking-[0.2em] hover:text-gray-500 transition-colors"
@@ -195,8 +205,8 @@ export default function Navbar() {
           )}
         </div>
 
-        {/* Right Actions */}
-        <div className="flex items-center gap-2 sm:gap-4">
+        {/* Kolom Kanan - Actions */}
+        <div className="flex-1 flex items-center justify-end gap-2 sm:gap-4">
           <div className="hidden sm:flex items-center gap-1 mr-2 cursor-pointer hover:opacity-60 transition-opacity">
             <span className="text-[10px] font-bold tracking-widest">ID</span>
             <ChevronDown size={12} />
@@ -267,7 +277,7 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* Results Overlay (Hanya muncul saat kursor di Navbar) */}
+      {/* Results Overlay */}
       <div 
         className={cn(
           "absolute inset-x-0 top-full bg-white z-0 transition-all duration-300 overflow-hidden shadow-2xl border-t border-gray-100",
@@ -275,7 +285,7 @@ export default function Navbar() {
         )}
         onMouseEnter={() => setIsOverlayOpen(true)}
       >
-        <div className="max-w-[1400px] mx-auto px-6 py-12 grid grid-cols-1 md:grid-cols-2 gap-12">
+        <div className="w-full px-6 sm:px-10 py-12 grid grid-cols-1 md:grid-cols-2 gap-12">
           <div className="flex flex-col gap-6">
             <h3 className="text-[10px] font-bold tracking-[0.2em] text-gray-400 uppercase">Products</h3>
             {searchResults.length > 0 ? (
@@ -335,14 +345,14 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* Secondary Mini Bar (Subcategories) */}
+      {/* Secondary Mini Bar */}
       <div 
         className={cn(
           "absolute left-0 right-0 bg-white border-b border-gray-100 transition-all duration-300 ease-in-out overflow-hidden z-0",
           hoveredCategory && currentCategory && !isSearchActive ? "h-12 translate-y-0 opacity-100" : "h-0 -translate-y-4 opacity-0"
         )}
       >
-        <div className="max-w-[1400px] mx-auto px-6 h-full flex items-center justify-center gap-12">
+        <div className="w-full px-6 sm:px-10 h-full flex items-center justify-center gap-12">
           {currentCategory?.subcategories.map((sub) => (
             <Link
               key={sub}
@@ -367,6 +377,14 @@ export default function Navbar() {
       {isMobileMenuOpen && (
         <div className="lg:hidden bg-white border-t border-gray-100 absolute top-full left-0 w-full max-h-[calc(100vh-64px)] overflow-y-auto shadow-xl">
           <div className="flex flex-col p-6 gap-6">
+            <Link
+              href="/shop"
+              className="text-xs font-bold tracking-[0.2em] uppercase"
+              onClick={() => { setIsMobileMenuOpen(false); closeSearch(); }}
+            >
+              All Products
+            </Link>
+            
             <Link
               href="/shop"
               className="text-xs font-bold tracking-[0.2em] uppercase"
