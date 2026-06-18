@@ -1,6 +1,6 @@
 'use client'
 
-import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react'
+import React, { createContext, useContext, useEffect, useState, useCallback } from 'react'
 import type { User } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/client'
 
@@ -27,25 +27,20 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
+// Initialize singleton client for browser environment
+const supabaseClient = typeof window !== 'undefined' ? createClient() : null
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [loading, setLoading] = useState(true)
-  const [supabase, setSupabase] = useState<ReturnType<typeof createClient> | null>(null)
-
-  useEffect(() => {
-    try {
-      setSupabase(createClient())
-    } catch {
-      console.error('Failed to initialize Supabase client. Check your environment variables.')
-      setLoading(false)
-    }
-  }, [])
 
   const fetchProfile = useCallback(async (userId: string) => {
-    if (!supabase) return
+    const client = supabaseClient || (typeof window !== 'undefined' ? createClient() : null)
+    if (!client) return
+
     try {
-      const { data } = await supabase
+      const { data } = await client
         .from('users')
         .select('id, email, name, phone, address, role, points, tier')
         .eq('id', userId)
@@ -57,7 +52,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch {
       try {
         await fetch('/api/auth', { method: 'POST' })
-        const { data: retryData } = await supabase
+        const { data: retryData } = await client
           .from('users')
           .select('id, email, name, phone, address, role, points, tier')
           .eq('id', userId)
@@ -66,9 +61,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setProfile(retryData as UserProfile)
         }
       } catch {
+        // Silent fail
       }
     }
-  }, [supabase])
+  }, [])
 
   const refreshProfile = useCallback(async () => {
     if (user) {
@@ -77,43 +73,53 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [user, fetchProfile])
 
   useEffect(() => {
-    if (!supabase) return
-
-    const timeout = setTimeout(() => {
+    const client = supabaseClient || (typeof window !== 'undefined' ? createClient() : null)
+    if (!client) {
       setLoading(false)
+      return
+    }
+
+    let mounted = true
+    const timeout = setTimeout(() => {
+      if (mounted) setLoading(false)
     }, 5000)
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event: string, session: any) => {
+    const { data: { subscription } } = client.auth.onAuthStateChange(
+      async (event, session) => {
+        if (!mounted) return
         clearTimeout(timeout)
 
         const currentUser = session?.user ?? null
         setUser(currentUser)
-        setLoading(false)
-
+        
         if (currentUser) {
-          fetchProfile(currentUser.id)
+          await fetchProfile(currentUser.id)
         } else {
           setProfile(null)
         }
+        
+        setLoading(false)
       }
     )
 
     return () => {
+      mounted = false
       clearTimeout(timeout)
       subscription.unsubscribe()
     }
-  }, [supabase, fetchProfile])
+  }, [fetchProfile])
 
   const signIn = async (email: string, password: string) => {
-    if (!supabase) return { error: 'Auth not configured' }
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    const client = supabaseClient || (typeof window !== 'undefined' ? createClient() : null)
+    if (!client) return { error: 'Auth not configured' }
+    const { error } = await client.auth.signInWithPassword({ email, password })
     return { error: error?.message ?? null }
   }
 
   const signUp = async (email: string, password: string, name: string) => {
-    if (!supabase) return { error: 'Auth not configured' }
-    const { error } = await supabase.auth.signUp({
+    const client = supabaseClient || (typeof window !== 'undefined' ? createClient() : null)
+    if (!client) return { error: 'Auth not configured' }
+    const { error } = await client.auth.signUp({
       email,
       password,
       options: { data: { name } },
@@ -122,12 +128,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const signOut = async () => {
-    if (!supabase) {
+    const client = supabaseClient || (typeof window !== 'undefined' ? createClient() : null)
+    if (!client) {
       setUser(null)
       setProfile(null)
       return
     }
-    await supabase.auth.signOut()
+    await client.auth.signOut()
     setUser(null)
     setProfile(null)
   }
