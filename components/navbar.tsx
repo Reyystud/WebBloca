@@ -1,11 +1,13 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
+import { useRouter, usePathname } from 'next/navigation'
 import { Search, User, ShoppingBag, Menu, X, Shield, ChevronDown } from 'lucide-react'
 import { useCart } from '@/context/cart-context'
 import { useAuth } from '@/context/auth-context'
 import { cn } from "@/lib/utils"
+import { ALL_PRODUCTS, Product } from '@/lib/products'
 
 const CATEGORIES = [
   {
@@ -33,9 +35,16 @@ const CATEGORIES = [
 export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [isSearchActive, setIsSearchActive] = useState(false)
+  const [isOverlayOpen, setIsOverlayOpen] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [searchResults, setSearchResults] = useState<Product[]>([])
   const [hoveredCategory, setHoveredCategory] = useState<string | null>(null)
   const { getItemCount, openCart } = useCart()
   const { user, profile, loading, signOut } = useAuth()
+  const router = useRouter()
+  const pathname = usePathname()
+  const searchInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     const handleScroll = () => {
@@ -46,6 +55,55 @@ export default function Navbar() {
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
+  useEffect(() => {
+    if (isSearchActive && searchInputRef.current) {
+      searchInputRef.current.focus()
+    }
+  }, [isSearchActive])
+
+  // Real-time search logic and results filtering
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setSearchResults([])
+      return
+    }
+
+    // Local filtering for live preview
+    const query = searchQuery.toLowerCase().trim()
+    const filtered = ALL_PRODUCTS.filter(p => 
+      p.name.toLowerCase().includes(query) ||
+      p.category.toLowerCase().includes(query) ||
+      p.subCategory?.toLowerCase().includes(query)
+    ).slice(0, 5)
+    setSearchResults(filtered)
+
+    const timer = setTimeout(() => {
+      const encodedQuery = encodeURIComponent(searchQuery.trim())
+      const newUrl = `/shop?search=${encodedQuery}`
+      
+      if (pathname === '/shop') {
+        router.replace(newUrl, { scroll: false })
+      } else {
+        router.push(newUrl)
+      }
+    }, 400)
+
+    return () => clearTimeout(timer)
+  }, [searchQuery, pathname, router])
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (searchQuery.trim()) {
+      setIsOverlayOpen(false)
+    }
+  }
+
+  const closeSearch = () => {
+    setIsSearchActive(false)
+    setIsOverlayOpen(false)
+    setSearchQuery('')
+  }
+
   const currentCategory = CATEGORIES.find(c => c.name === hoveredCategory)
 
   return (
@@ -54,51 +112,87 @@ export default function Navbar() {
         "fixed top-0 left-0 right-0 z-50 transition-all duration-300 bg-white border-b border-gray-100",
         isScrolled ? "h-16" : "h-20"
       )}
-      onMouseLeave={() => setHoveredCategory(null)}
+      onMouseLeave={() => {
+        setHoveredCategory(null)
+        setIsOverlayOpen(false)
+      }}
     >
       <div className="max-w-[1400px] mx-auto px-6 h-full flex items-center justify-between relative z-10 bg-white">
         {/* Logo */}
         <Link
           href="/"
-          className="text-2xl font-black tracking-tighter hover:opacity-75 transition-opacity"
+          className={cn(
+            "text-2xl font-black tracking-tighter hover:opacity-75 transition-all duration-300",
+            isSearchActive ? "w-0 opacity-0 overflow-hidden pointer-events-none" : "w-auto opacity-100"
+          )}
+          onClick={closeSearch}
         >
           BLOCA.
         </Link>
 
-        {/* Desktop Navigation */}
-        <div className="hidden lg:flex items-center justify-center flex-1 h-full">
-          <div className="flex items-center gap-1">
-            <Link 
-              href="/shop"
-              className="px-4 h-full flex items-center text-[11px] font-bold tracking-[0.2em] hover:text-gray-500 transition-colors"
+        {/* Desktop Navigation & Search Bar */}
+        <div className="flex-1 flex items-center justify-center h-full px-8">
+          {isSearchActive ? (
+            <div 
+              className="w-full max-w-2xl flex items-center gap-4 transition-all duration-300"
+              onMouseEnter={() => setIsOverlayOpen(true)}
             >
-              BEST SELLERS
-            </Link>
-
-            {CATEGORIES.map((category) => (
-              <Link
-                key={category.name}
-                href={category.href}
-                className={cn(
-                  "px-4 h-full flex items-center text-[11px] font-bold tracking-[0.2em] transition-colors relative",
-                  hoveredCategory === category.name ? "text-black" : "text-gray-900 hover:text-gray-500"
-                )}
-                onMouseEnter={() => setHoveredCategory(category.name)}
+              <Search size={18} className="text-gray-400 shrink-0" />
+              <form onSubmit={handleSearchSubmit} className="flex-1">
+                <input
+                  ref={searchInputRef}
+                  type="text"
+                  placeholder="SEARCH OUR PRODUCTS..."
+                  className="w-full text-sm font-bold tracking-[0.2em] outline-none placeholder:text-gray-300 uppercase bg-transparent"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onFocus={() => setIsOverlayOpen(true)}
+                />
+              </form>
+              <button 
+                onClick={closeSearch}
+                className="p-1 hover:bg-gray-100 rounded-full transition-colors shrink-0"
               >
-                {category.name}
-                {hoveredCategory === category.name && (
-                  <div className="absolute bottom-0 left-4 right-4 h-[2px] bg-black" />
-                )}
+                <X size={18} />
+              </button>
+            </div>
+          ) : (
+            <div className="hidden lg:flex items-center gap-1">
+              <Link 
+                href="/shop"
+                className="px-4 h-full flex items-center text-[11px] font-bold tracking-[0.2em] hover:text-gray-500 transition-colors"
+                onClick={closeSearch}
+              >
+                BEST SELLERS
               </Link>
-            ))}
 
-            <Link 
-              href="/shop?category=Sale item"
-              className="px-4 h-full flex items-center text-[11px] font-bold tracking-[0.2em] text-red-600 hover:opacity-75 transition-opacity"
-            >
-              SALE
-            </Link>
-          </div>
+              {CATEGORIES.map((category) => (
+                <Link
+                  key={category.name}
+                  href={category.href}
+                  className={cn(
+                    "px-4 h-full flex items-center text-[11px] font-bold tracking-[0.2em] transition-colors relative",
+                    hoveredCategory === category.name ? "text-black" : "text-gray-900 hover:text-gray-500"
+                  )}
+                  onMouseEnter={() => setHoveredCategory(category.name)}
+                  onClick={closeSearch}
+                >
+                  {category.name}
+                  {hoveredCategory === category.name && (
+                    <div className="absolute bottom-0 left-4 right-4 h-[2px] bg-black" />
+                  )}
+                </Link>
+              ))}
+
+              <Link 
+                href="/shop?category=Sale item"
+                className="px-4 h-full flex items-center text-[11px] font-bold tracking-[0.2em] text-red-600 hover:opacity-75 transition-opacity"
+                onClick={closeSearch}
+              >
+                SALE
+              </Link>
+            </div>
+          )}
         </div>
 
         {/* Right Actions */}
@@ -108,9 +202,14 @@ export default function Navbar() {
             <ChevronDown size={12} />
           </div>
 
-          <button className="p-2 hover:opacity-60 transition-opacity">
-            <Search size={20} strokeWidth={1.5} />
-          </button>
+          {!isSearchActive && (
+            <button 
+              onClick={() => { setIsSearchActive(true); setIsOverlayOpen(true); }}
+              className="p-2 hover:opacity-60 transition-opacity"
+            >
+              <Search size={20} strokeWidth={1.5} />
+            </button>
+          )}
 
           {loading ? (
             <div className="w-5 h-5 border-2 border-gray-300 border-t-black rounded-full animate-spin" />
@@ -144,13 +243,13 @@ export default function Navbar() {
               </div>
             </div>
           ) : (
-            <Link href="/auth/login" className="p-2 hover:opacity-60 transition-opacity">
+            <Link href="/auth/login" className="p-2 hover:opacity-60 transition-opacity" onClick={closeSearch}>
               <User size={20} strokeWidth={1.5} />
             </Link>
           )}
 
           <button
-            onClick={openCart}
+            onClick={() => { openCart(); closeSearch(); }}
             className="p-2 hover:opacity-60 transition-opacity relative"
           >
             <ShoppingBag size={20} strokeWidth={1.5} />
@@ -160,7 +259,7 @@ export default function Navbar() {
           </button>
 
           <button
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            onClick={() => { setIsMobileMenuOpen(!isMobileMenuOpen); closeSearch(); }}
             className="lg:hidden p-2 hover:opacity-60 transition-opacity"
           >
             {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
@@ -168,11 +267,79 @@ export default function Navbar() {
         </div>
       </div>
 
+      {/* Results Overlay (Hanya muncul saat kursor di Navbar) */}
+      <div 
+        className={cn(
+          "absolute inset-x-0 top-full bg-white z-0 transition-all duration-300 overflow-hidden shadow-2xl border-t border-gray-100",
+          isOverlayOpen && isSearchActive && searchQuery.trim() ? "max-h-[600px] opacity-100" : "max-h-0 opacity-0"
+        )}
+        onMouseEnter={() => setIsOverlayOpen(true)}
+      >
+        <div className="max-w-[1400px] mx-auto px-6 py-12 grid grid-cols-1 md:grid-cols-2 gap-12">
+          <div className="flex flex-col gap-6">
+            <h3 className="text-[10px] font-bold tracking-[0.2em] text-gray-400 uppercase">Products</h3>
+            {searchResults.length > 0 ? (
+              <div className="flex flex-col gap-4">
+                {searchResults.map((product) => (
+                  <Link
+                    key={product.id}
+                    href={`/products/${product.id}`}
+                    onClick={closeSearch}
+                    className="flex items-center gap-4 group"
+                  >
+                    <div className="w-16 h-16 bg-gray-50 rounded overflow-hidden shrink-0">
+                      <img 
+                        src={`/${product.image}`} 
+                        alt={product.name}
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                      />
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-xs font-bold tracking-wider uppercase group-hover:text-gray-500 transition-colors">
+                        {product.name}
+                      </span>
+                      <span className="text-[10px] text-gray-400 uppercase tracking-widest">
+                        ${product.price.toFixed(2)}
+                      </span>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            ) : (
+              <p className="text-xs text-gray-400 italic">No products found</p>
+            )}
+            <Link
+              href={`/shop?search=${encodeURIComponent(searchQuery)}`}
+              onClick={closeSearch}
+              className="text-[10px] font-bold tracking-[0.2em] uppercase border-b border-black w-fit pb-1 hover:opacity-60 transition-opacity"
+            >
+              View all results
+            </Link>
+          </div>
+
+          <div className="flex flex-col gap-6">
+            <h3 className="text-[10px] font-bold tracking-[0.2em] text-gray-400 uppercase">Quick Links</h3>
+            <div className="flex flex-col gap-4">
+              {CATEGORIES.map(cat => (
+                <Link
+                  key={cat.name}
+                  href={cat.href}
+                  onClick={closeSearch}
+                  className="text-xs font-bold tracking-[0.1em] hover:text-gray-500 transition-colors uppercase"
+                >
+                  {cat.name}
+                </Link>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Secondary Mini Bar (Subcategories) */}
       <div 
         className={cn(
           "absolute left-0 right-0 bg-white border-b border-gray-100 transition-all duration-300 ease-in-out overflow-hidden z-0",
-          hoveredCategory && currentCategory ? "h-12 translate-y-0 opacity-100" : "h-0 -translate-y-4 opacity-0"
+          hoveredCategory && currentCategory && !isSearchActive ? "h-12 translate-y-0 opacity-100" : "h-0 -translate-y-4 opacity-0"
         )}
       >
         <div className="max-w-[1400px] mx-auto px-6 h-full flex items-center justify-center gap-12">
@@ -181,6 +348,7 @@ export default function Navbar() {
               key={sub}
               href={`${currentCategory.href}&subcategory=${sub}`}
               className="text-[10px] font-bold tracking-[0.2em] text-gray-500 hover:text-black transition-colors uppercase"
+              onClick={closeSearch}
             >
               {sub}
             </Link>
@@ -188,6 +356,7 @@ export default function Navbar() {
           <Link
             href={currentCategory?.href || "/shop"}
             className="text-[10px] font-black tracking-[0.2em] text-black hover:opacity-60 transition-opacity uppercase border-b border-black"
+            onClick={closeSearch}
           >
             Shop All
           </Link>
@@ -201,7 +370,7 @@ export default function Navbar() {
             <Link
               href="/shop"
               className="text-xs font-bold tracking-[0.2em] uppercase"
-              onClick={() => setIsMobileMenuOpen(false)}
+              onClick={() => { setIsMobileMenuOpen(false); closeSearch(); }}
             >
               Best Sellers
             </Link>
@@ -211,7 +380,7 @@ export default function Navbar() {
                 <Link 
                   href={category.href}
                   className="text-xs font-bold tracking-[0.2em] uppercase"
-                  onClick={() => setIsMobileMenuOpen(false)}
+                  onClick={() => { setIsMobileMenuOpen(false); closeSearch(); }}
                 >
                   {category.name}
                 </Link>
@@ -221,7 +390,7 @@ export default function Navbar() {
                       key={sub}
                       href={`${category.href}&subcategory=${sub}`}
                       className="text-xs text-gray-500"
-                      onClick={() => setIsMobileMenuOpen(false)}
+                      onClick={() => { setIsMobileMenuOpen(false); closeSearch(); }}
                     >
                       {sub}
                     </Link>
@@ -233,7 +402,7 @@ export default function Navbar() {
             <Link
               href="/shop?category=Sale item"
               className="text-xs font-bold tracking-[0.2em] uppercase text-red-600"
-              onClick={() => setIsMobileMenuOpen(false)}
+              onClick={() => { setIsMobileMenuOpen(false); closeSearch(); }}
             >
               Sale
             </Link>
@@ -243,11 +412,11 @@ export default function Navbar() {
             <div className="flex flex-col gap-4">
               {user ? (
                 <>
-                  <Link href="/account" className="text-xs font-bold tracking-[0.2em] uppercase" onClick={() => setIsMobileMenuOpen(false)}>Account</Link>
-                  <button onClick={() => { signOut(); setIsMobileMenuOpen(false) }} className="text-xs font-bold tracking-[0.2em] uppercase text-red-600 text-left">Sign Out</button>
+                  <Link href="/account" className="text-xs font-bold tracking-[0.2em] uppercase" onClick={() => { setIsMobileMenuOpen(false); closeSearch(); }}>Account</Link>
+                  <button onClick={() => { signOut(); setIsMobileMenuOpen(false); closeSearch(); }} className="text-xs font-bold tracking-[0.2em] uppercase text-red-600 text-left">Sign Out</button>
                 </>
               ) : (
-                <Link href="/auth/login" className="text-xs font-bold tracking-[0.2em] uppercase" onClick={() => setIsMobileMenuOpen(false)}>Sign In</Link>
+                <Link href="/auth/login" className="text-xs font-bold tracking-[0.2em] uppercase" onClick={() => { setIsMobileMenuOpen(false); closeSearch(); }}>Sign In</Link>
               )}
             </div>
           </div>
