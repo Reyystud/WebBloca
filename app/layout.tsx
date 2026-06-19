@@ -7,6 +7,7 @@ import Footer from '@/components/footer'
 import CartDrawer from '@/components/cart-drawer'
 import { CartProvider } from '@/context/cart-context'
 import { AuthProvider } from '@/context/auth-context'
+import { ThemeProvider } from '@/context/theme-context'
 
 const geist = Geist({ subsets: ["latin"], variable: '--font-sans' });
 const geistMono = Geist_Mono({ subsets: ["latin"], variable: '--font-mono' });
@@ -37,10 +38,12 @@ export default function RootLayout({
       <body className="font-sans antialiased bg-white text-black">
         <AuthProvider>
           <CartProvider>
-            <Navbar />
-            {children}
-            <Footer />
-            <CartDrawer />
+            <ThemeProvider>
+              <Navbar />
+              {children}
+              <Footer />
+              <CartDrawer />
+            </ThemeProvider>
           </CartProvider>
         </AuthProvider>
         <Analytics />
