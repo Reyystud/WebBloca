@@ -22,7 +22,7 @@ export default function ProductCard({ id, name, price, image, isBestSeller }: Pr
   return (
     <Link href={`/products/${id}`} className="group block">
       <div
-        className="relative bg-gray-50 aspect-square rounded-lg overflow-hidden mb-4 cursor-pointer transition-all duration-300"
+        className="relative bg-gray-50 dark:bg-[#1a1a1a] aspect-square rounded-lg overflow-hidden mb-4 cursor-pointer transition-all duration-300"
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
@@ -41,7 +41,7 @@ export default function ProductCard({ id, name, price, image, isBestSeller }: Pr
         {/* Best Seller Badge */}
         {isBestSeller && (
           <div className="absolute top-4 left-4 z-10">
-            <span className="inline-block bg-black text-white text-[10px] font-bold tracking-widest uppercase px-3 py-1 rounded-full shadow-sm">
+            <span className="inline-block bg-black dark:bg-white text-white dark:text-black text-[10px] font-bold tracking-widest uppercase px-3 py-1 rounded-full shadow-sm">
               Best Seller
             </span>
           </div>
@@ -66,10 +66,10 @@ export default function ProductCard({ id, name, price, image, isBestSeller }: Pr
       {/* Product Info & Action */}
       <div className="flex items-start justify-between gap-4">
         <div className="space-y-1 flex-1">
-          <h3 className="text-[11px] font-bold uppercase tracking-widest text-gray-900 group-hover:opacity-60 transition-opacity truncate">
+          <h3 className="text-[11px] font-bold uppercase tracking-widest text-gray-900 dark:text-white group-hover:opacity-60 transition-opacity truncate">
             {name}
           </h3>
-          <p className="text-xs font-medium text-gray-500">
+          <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
             {formatPrice(price)}
           </p>
         </div>
@@ -80,7 +80,7 @@ export default function ProductCard({ id, name, price, image, isBestSeller }: Pr
             e.stopPropagation();
             addItem({ id, name, price, image });
           }}
-          className="p-2.5 bg-gray-900 text-white rounded-full hover:bg-black transition-colors shadow-sm"
+          className="p-2.5 bg-gray-900 dark:bg-white text-white dark:text-black rounded-full hover:bg-black dark:hover:bg-gray-200 transition-colors shadow-sm"
           title="Add to Cart"
         >
           <ShoppingCart size={16} />
