@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { useEffect, useState } from 'react'
 
 export default function HeroSection() {
@@ -53,10 +54,13 @@ export default function HeroSection() {
         {/* Right: Image */}
         <div className="relative h-[50vh] md:h-full w-full bg-white overflow-hidden">
           <div className={`h-full w-full transition-all duration-[1.5s] ease-in-out ${isLoaded ? 'scale-100 opacity-100' : 'scale-110 opacity-0'}`}>
-            <img 
+            <Image
               src="/Model/image.webp" 
               alt="Bloca Premium Artisan Piece" 
-              className="w-full h-full object-cover object-center contrast-[1.02] brightness-[1.02]"
+              fill
+              priority
+              sizes="(max-width: 768px) 100vw, 50vw"
+              className="object-cover object-center contrast-[1.02] brightness-[1.02]"
             />
           </div>
           {/* Subtle gradient overlay to blend even better if needed */}

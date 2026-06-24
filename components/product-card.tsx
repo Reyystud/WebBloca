@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { Heart, ShoppingCart } from 'lucide-react'
 import { useCart } from '@/context/cart-context'
 import { formatPrice } from '@/lib/format'
@@ -27,10 +28,12 @@ export default function ProductCard({ id, name, price, image, isBestSeller }: Pr
         onMouseLeave={() => setIsHovered(false)}
       >
         {image ? (
-          <img
+          <Image
             src={image.startsWith('/') || image.startsWith('http') ? image : `/${image}`}
             alt={name}
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+            fill
+            sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
+            className="object-cover transition-transform duration-500 group-hover:scale-105"
           />
         ) : (
           <div className="absolute inset-0 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
