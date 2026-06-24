@@ -26,8 +26,6 @@ export default function LoginForm() {
         setError(authError)
         return
       }
-      // Ensure profile exists in DB
-      await fetch('/api/auth', { method: 'POST' }).catch(() => {})
       router.push('/account')
     } catch {
       setError('Invalid credentials. Please try again.')

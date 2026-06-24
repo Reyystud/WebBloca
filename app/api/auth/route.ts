@@ -4,7 +4,29 @@ import prisma from '@/lib/prisma'
 
 export async function POST(request: Request) {
   try {
+    const body = await request.json().catch(() => ({}))
     const supabase = await createClient()
+
+    if (body?.action === 'signOut') {
+      await supabase.auth.signOut()
+      return NextResponse.json({ success: true })
+    }
+
+    if (body?.access_token) {
+      const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
+        access_token: body.access_token,
+        refresh_token: body.refresh_token,
+      })
+
+      if (sessionError) {
+        return NextResponse.json({ error: sessionError.message }, { status: 401 })
+      }
+
+      if (!sessionData?.session) {
+        return NextResponse.json({ error: 'Unable to sync auth session' }, { status: 401 })
+      }
+    }
+
     const { data: { user } } = await supabase.auth.getUser()
 
     if (!user) {

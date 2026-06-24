@@ -50,8 +50,6 @@ export default function RegisterForm() {
         setError(authError)
         return
       }
-      // Ensure profile exists in DB
-      await fetch('/api/auth', { method: 'POST' }).catch(() => {})
       router.push('/account')
     } catch {
       setError('Registration failed. Please try again.')
