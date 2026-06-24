@@ -139,27 +139,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [fetchProfile, syncServerSession])
 
   const signIn = async (email: string, password: string) => {
-    const client = supabaseClient || (typeof window !== 'undefined' ? createClient() : null)
-    if (!client) return { error: 'Auth not configured', session: null }
+    try {
+      const client = supabaseClient || (typeof window !== 'undefined' ? createClient() : null)
+      if (!client) return { error: 'Auth not configured', session: null }
 
-    const { data, error } = await client.auth.signInWithPassword({ email, password })
-    await syncServerSession(data.session ?? null)
+      const { data, error } = await client.auth.signInWithPassword({ email, password })
+      if (error) return { error: error.message ?? 'Sign in failed', session: data.session ?? null }
 
-    return { error: error?.message ?? null, session: data.session ?? null }
+      await syncServerSession(data.session ?? null)
+      return { error: null, session: data.session ?? null }
+    } catch (err: any) {
+      return { error: err?.message ?? 'Network error', session: null }
+    }
   }
 
   const signUp = async (email: string, password: string, name: string) => {
-    const client = supabaseClient || (typeof window !== 'undefined' ? createClient() : null)
-    if (!client) return { error: 'Auth not configured', session: null }
+    try {
+      const client = supabaseClient || (typeof window !== 'undefined' ? createClient() : null)
+      if (!client) return { error: 'Auth not configured', session: null }
 
-    const { data, error } = await client.auth.signUp({
-      email,
-      password,
-      options: { data: { name } },
-    })
-    await syncServerSession(data.session ?? null)
+      const { data, error } = await client.auth.signUp({
+        email,
+        password,
+        options: { data: { name } },
+      })
 
-    return { error: error?.message ?? null, session: data.session ?? null }
+      if (error) return { error: error.message ?? 'Sign up failed', session: data.session ?? null }
+
+      await syncServerSession(data.session ?? null)
+      return { error: null, session: data.session ?? null }
+    } catch (err: any) {
+      return { error: err?.message ?? 'Network error', session: null }
+    }
   }
 
   const signOut = async () => {
