@@ -54,7 +54,7 @@ export default function HeroSection() {
         <div className="relative h-[50vh] md:h-full w-full bg-white overflow-hidden">
           <div className={`h-full w-full transition-all duration-[1.5s] ease-in-out ${isLoaded ? 'scale-100 opacity-100' : 'scale-110 opacity-0'}`}>
             <img 
-              src="/Model/image.png" 
+              src="/Model/image.webp" 
               alt="Bloca Premium Artisan Piece" 
               className="w-full h-full object-cover object-center contrast-[1.02] brightness-[1.02]"
             />

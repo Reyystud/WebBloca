@@ -3,12 +3,12 @@
 import { useEffect, useRef, useState } from 'react'
 
 const LIFESTYLE_IMAGES = [
-  '/Model/BalletBagCharm.jpeg',
-  '/Model/IvyBracelet.jpeg',
-  '/Model/PiyoSparkleBracelet.jpeg',
-  '/Model/PunzelBracelet.jpeg',
-  '/Model/solitaresparklerings.jpeg',
-  '/Model/IllumaBracelet.jpeg',
+  '/Model/BalletBagCharm.webp',
+  '/Model/IvyBracelet.webp',
+  '/Model/PiyoSparkleBracelet.webp',
+  '/Model/PunzelBracelet.webp',
+  '/Model/solitaresparklerings.webp',
+  '/Model/IllumaBracelet.webp',
 ]
 
 export default function BrandStory() {
