@@ -148,6 +148,15 @@ prisma/
 proxy.ts                  # Next.js 16 auth proxy (route protection)
 ```
 
+## Database Flow Diagram
+
+The database entity relationship diagram is available as an interactive HTML file:
+
+- `public/flow/bloca_db_schema_erd.html`
+- Open it in your browser or visit `/flow/bloca_db_schema_erd.html` when the app is running.
+
+> If you view the repository on GitHub, click the link to see the flow diagram in your browser.
+
 ## Available Scripts
 
 
