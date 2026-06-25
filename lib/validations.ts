@@ -80,6 +80,12 @@ export const updateUserSchema = z.object({
   points: z.number().int().optional(),
 })
 
+export const updateProfileSchema = z.object({
+  name: z.string().optional().nullable(),
+  phone: z.string().optional().nullable(),
+  address: z.string().optional().nullable(),
+})
+
 export const updateCartItemSchema = z.object({
   quantity: z.number().int().positive(),
 })
