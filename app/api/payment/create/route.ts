@@ -6,7 +6,7 @@ import { handleApiError, NotFoundError, ValidationError } from '@/lib/error-hand
 export async function POST(request: Request) {
   try {
     const user = await requireAuth()
-    const { orderId } = await request.json()
+    const { orderId, paymentMethod } = await request.json()
 
     if (!orderId) {
       throw new ValidationError('Order ID is required')
@@ -64,6 +64,7 @@ export async function POST(request: Request) {
           type: 'SHIPPING',
           value: Number(order.shippingCost),
         }] : undefined,
+        paymentMethods: paymentMethod === 'QRIS' ? ['QRIS'] : (paymentMethod === 'BANK_TRANSFER' ? ['BCA', 'BNI', 'BRI', 'MANDIRI', 'PERMATA', 'BSI', 'BJB', 'CIMB'] : undefined),
       },
     })
 
@@ -73,7 +74,7 @@ export async function POST(request: Request) {
         xenditInvoiceId: invoice.id || undefined,
         xenditExternalId: invoice.externalId || undefined,
         amount: totalWithShipping,
-        paymentMethod: 'XENDIT_INVOICE',
+        paymentMethod: paymentMethod || 'XENDIT_INVOICE',
         paymentStatus: 'PENDING',
         paymentUrl: invoice.invoiceUrl || undefined,
         qrCodeUrl: undefined,
@@ -85,7 +86,7 @@ export async function POST(request: Request) {
       where: { id: order.id },
       data: {
         paymentStatus: 'PENDING',
-        paymentMethod: 'XENDIT_INVOICE',
+        paymentMethod: paymentMethod || 'XENDIT_INVOICE',
         paymentReference: invoice.id || undefined,
       },
     })

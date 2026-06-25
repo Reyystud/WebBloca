@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
-import { useParams } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Package, CreditCard, Truck, ExternalLink, Loader2, MapPin, Phone } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -61,7 +61,14 @@ const paymentStatusColors: Record<string, string> = {
   EXPIRED: 'bg-gray-100 text-gray-500 border-gray-200',
 }
 
-const statusSteps = ['PENDING', 'PROCESSING', 'SHIPPED', 'DELIVERED']
+const visualSteps = ['ON PROCESS', 'ON THE WAY', 'SHIPPED']
+
+const statusToVisualIdx = (status: string) => {
+  if (status === 'PROCESSING') return 0
+  if (status === 'SHIPPED') return 1
+  if (status === 'DELIVERED') return 2
+  return -1
+}
 
 function getTrackingUrl(provider: string, trackingNum: string) {
   switch (provider?.toUpperCase()) {
@@ -74,9 +81,11 @@ function getTrackingUrl(provider: string, trackingNum: string) {
 
 export default function OrderDetailPage() {
   const { id } = useParams()
+  const router = useRouter()
   const [order, setOrder] = useState<OrderDetail | null>(null)
   const [loading, setLoading] = useState(true)
   const [paying, setPaying] = useState(false)
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('QRIS')
 
   const fetchOrder = useCallback(async () => {
     try {
@@ -97,19 +106,12 @@ export default function OrderDetailPage() {
     if (!order) return
     setPaying(true)
     try {
-      const res = await fetch('/api/payment/create', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ orderId: order.id }),
-      })
-      const data = await res.json()
-      if (data.paymentUrl) {
-        window.location.href = data.paymentUrl
-      }
+      // Redirect to the custom payment page with the selected method
+      router.push(`/account/orders/${order.id}/pay?method=${selectedPaymentMethod}`)
     } catch (err) {
       console.error(err)
     } finally {
-      setPaying(false)
+      // Let the new page load, we don't need to reset paying unless error
     }
   }
 
@@ -130,7 +132,7 @@ export default function OrderDetailPage() {
     )
   }
 
-  const currentStepIdx = statusSteps.indexOf(order.status)
+
 
   return (
     <div className="space-y-6">
@@ -167,23 +169,16 @@ export default function OrderDetailPage() {
         )}
       </div>
 
-      {/* Order Progress */}
-      {order.status !== 'CANCELLED' && (
-        <div className="bg-white border border-gray-200 rounded-lg p-6">
-          <div className="flex justify-between">
-            {statusSteps.map((step, i) => (
-              <div key={step} className="flex flex-col items-center flex-1">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
-                  i <= currentStepIdx ? 'bg-black text-white' : 'bg-gray-200 text-gray-500'
-                }`}>
-                  {i <= currentStepIdx ? '✓' : i + 1}
-                </div>
-                <p className={`text-xs mt-1 ${i <= currentStepIdx ? 'text-black font-semibold' : 'text-gray-400'}`}>
-                  {step === 'PROCESSING' ? 'Processing' : step.charAt(0) + step.slice(1).toLowerCase()}
-                </p>
-              </div>
-            ))}
+      {/* Order Progress Link */}
+      {order.status !== 'CANCELLED' && order.status !== 'PENDING' && (
+        <div className="bg-white border border-gray-200 rounded-lg p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div>
+            <h3 className="font-bold text-lg mb-1">Track Your Order</h3>
+            <p className="text-sm text-gray-500">View real-time shipping progress and courier updates.</p>
           </div>
+          <Link href={`/account/orders/${order.id}/shipping`} className="btn-primary whitespace-nowrap">
+            View Tracking Details
+          </Link>
         </div>
       )}
 
@@ -286,10 +281,39 @@ export default function OrderDetailPage() {
               </div>
 
               {(order.paymentStatus === 'UNPAID' || order.paymentStatus === 'PENDING' || order.paymentStatus === 'EXPIRED') && (
-                <Button onClick={handlePayNow} disabled={paying} className="btn-primary w-full mt-4">
-                  {paying ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-                  {order.paymentStatus === 'EXPIRED' ? 'Pay Again' : 'Pay Now'}
-                </Button>
+                <>
+                  <div className="pt-4 space-y-3">
+                    <span className="text-gray-600 text-sm font-medium">Select Payment Option</span>
+                    <div className="flex flex-col gap-3">
+                      <button
+                        onClick={() => setSelectedPaymentMethod('QRIS')}
+                        disabled={paying || order.paymentStatus === 'PENDING'}
+                        className={`py-2.5 px-4 rounded-lg border-2 text-xs uppercase tracking-wider font-bold transition-all ${
+                          selectedPaymentMethod === 'QRIS'
+                            ? 'border-black bg-black text-white'
+                            : 'border-gray-200 bg-white text-gray-500 hover:border-gray-400 disabled:opacity-50'
+                        }`}
+                      >
+                        QRIS
+                      </button>
+                      <button
+                        onClick={() => setSelectedPaymentMethod('BANK_TRANSFER')}
+                        disabled={paying || order.paymentStatus === 'PENDING'}
+                        className={`py-2.5 px-4 rounded-lg border-2 text-xs uppercase tracking-wider font-bold transition-all ${
+                          selectedPaymentMethod === 'BANK_TRANSFER'
+                            ? 'border-black bg-black text-white'
+                            : 'border-gray-200 bg-white text-gray-500 hover:border-gray-400 disabled:opacity-50'
+                        }`}
+                      >
+                        Transfer Bank
+                      </button>
+                    </div>
+                  </div>
+                  <Button onClick={handlePayNow} disabled={paying} className="btn-primary w-full mt-4 h-12 text-sm">
+                    {paying ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                    {order.paymentStatus === 'EXPIRED' ? 'Pay Again' : 'Pay Now'}
+                  </Button>
+                </>
               )}
             </div>
           </div>

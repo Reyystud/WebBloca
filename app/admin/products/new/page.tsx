@@ -182,7 +182,7 @@ export default function NewProductPage() {
                 type="text"
                 value={form.image}
                 onChange={(e) => setForm({ ...form, image: e.target.value })}
-                placeholder="/Catalog/product/image.jpg"
+                placeholder="/Catalog/product/image.webp"
                 className="w-full mt-1 px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-black transition-colors"
               />
             </div>
