@@ -44,7 +44,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([])
   const [isOpen, setIsOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
-  const syncRef = useRef(false)
+  const syncRef = useRef<string | boolean>(false)
   const { user } = useAuth()
 
   useEffect(() => {
