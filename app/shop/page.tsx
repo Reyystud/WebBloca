@@ -43,6 +43,7 @@ function ShopContent() {
   const [selectedSubCategory, setSelectedSubCategory] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState<string | null>(null)
   const [brand, setBrand] = useState('BLOCA')
+  const [currentPage, setCurrentPage] = useState(1)
   const { setIsDark } = useTheme()
 
   useEffect(() => {
@@ -85,6 +86,9 @@ function ShopContent() {
     } else {
       setSelectedSubCategory(null)
     }
+    
+    // Reset page when filters change
+    setCurrentPage(1)
   }, [searchParams])
 
   const handleBrandChange = (newBrand: string) => {
@@ -155,6 +159,13 @@ function ShopContent() {
     ? filteredProducts.slice(0, 4)
     : filteredProducts
 
+  const itemsPerPage = 8
+  const totalPages = Math.ceil(finalProducts.length / itemsPerPage)
+  const paginatedProducts = finalProducts.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  )
+
   return (
     <div className="bg-white dark:bg-[#0f0f0f] min-h-screen pt-16 transition-colors duration-500">
       {/* Moving Text Banner */}
@@ -199,7 +210,7 @@ function ShopContent() {
         <div className="flex flex-col md:flex-row gap-16">
           
           {/* Sidebar Navigation */}
-          <aside className="w-full md:w-56 shrink-0">
+          <aside className="hidden md:block w-56 shrink-0">
             <h2 className="text-xs font-bold tracking-[0.2em] uppercase mb-10 text-gray-400">Categories</h2>
             
             <nav className="flex flex-col space-y-6">
@@ -270,18 +281,49 @@ function ShopContent() {
             </header>
 
             {finalProducts.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-12">
-                {finalProducts.map(product => (
-                  <ProductCard
-                    key={product.id}
-                    id={product.id}
-                    name={product.name}
-                    price={product.price}
-                    image={product.image}
-                    isBestSeller={selectedCategory === 'Best seller'}
-                  />
-                ))}
-              </div>
+              <>
+                <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-x-8 sm:gap-y-12">
+                  {paginatedProducts.map(product => (
+                    <ProductCard
+                      key={product.id}
+                      id={product.id}
+                      name={product.name}
+                      price={product.price}
+                      image={product.image}
+                      isBestSeller={selectedCategory === 'Best seller'}
+                    />
+                  ))}
+                </div>
+
+                {/* Pagination Controls */}
+                {totalPages > 1 && (
+                  <div className="flex justify-center items-center mt-16 gap-2">
+                    <button 
+                      onClick={() => {
+                        setCurrentPage(p => Math.max(1, p - 1))
+                        window.scrollTo({ top: 0, behavior: 'smooth' })
+                      }}
+                      disabled={currentPage === 1}
+                      className="px-6 py-2 border border-gray-200 dark:border-gray-800 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors text-sm font-medium"
+                    >
+                      Prev
+                    </button>
+                    <span className="text-sm font-medium mx-4 text-gray-500">
+                      {currentPage} / {totalPages}
+                    </span>
+                    <button 
+                      onClick={() => {
+                        setCurrentPage(p => Math.min(totalPages, p + 1))
+                        window.scrollTo({ top: 0, behavior: 'smooth' })
+                      }}
+                      disabled={currentPage === totalPages}
+                      className="px-6 py-2 border border-gray-200 dark:border-gray-800 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors text-sm font-medium"
+                    >
+                      Next
+                    </button>
+                  </div>
+                )}
+              </>
             ) : (
               <div className="py-32 flex flex-col items-center justify-center border border-dashed border-gray-100 dark:border-gray-800 rounded-2xl">
                 <p className="text-gray-400 font-light italic text-center px-4">
