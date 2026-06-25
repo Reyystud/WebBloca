@@ -30,14 +30,24 @@ export async function POST(request: Request) {
     const { createOrderSchema } = await import('@/lib/validations')
     const data = createOrderSchema.parse(body)
 
-    const cartItems = await prisma.cartItem.findMany({
-      where: { userId: user.id },
-      include: { product: true },
-    })
-
-    if (cartItems.length === 0) {
+    if (!data.items || data.items.length === 0) {
       throw new ValidationError('Cart is empty')
     }
+
+    const productIds = data.items.map(item => item.id)
+    const products = await prisma.product.findMany({
+      where: { id: { in: productIds } }
+    })
+
+    const cartItems = data.items.map(item => {
+      const product = products.find(p => p.id === item.id)
+      if (!product) throw new ValidationError(`Product not found: ${item.id}`)
+      return {
+        productId: product.id,
+        quantity: item.quantity,
+        product
+      }
+    })
 
     for (const item of cartItems) {
       if (item.product.isDeleted) {
@@ -58,7 +68,7 @@ export async function POST(request: Request) {
       for (const item of cartItems) {
         const product = await tx.product.findUnique({ where: { id: item.productId } })
         if (!product || product.stock < item.quantity) {
-          throw new ValidationError(`Not enough stock for "${item.product.name}"`)
+          throw new ValidationError(`Not enough stock for "${item.product?.name || item.productId}"`)
         }
         await tx.product.update({
           where: { id: item.productId },

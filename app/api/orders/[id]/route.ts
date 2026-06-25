@@ -38,22 +38,49 @@ export async function PATCH(
     const { id } = await params
     const body = await request.json()
 
-    const { updateCartItemSchema } = await import('@/lib/validations')
-    const data = updateCartItemSchema.parse(body)
+    const { updateOrderStatusSchema } = await import('@/lib/validations')
+    const data = updateOrderStatusSchema.parse(body)
 
-    const cartItem = await prisma.cartItem.findUnique({ where: { id } })
-    if (!cartItem || cartItem.userId !== user.id) {
-      throw new NotFoundError('Cart item not found')
-    }
-
-    if (data.quantity <= 0) {
-      await prisma.cartItem.delete({ where: { id } })
-      return NextResponse.json({ success: true })
-    }
-
-    const updated = await prisma.cartItem.update({
+    const order = await prisma.order.findUnique({
       where: { id },
-      data: { quantity: data.quantity },
+      include: { orderItems: true }
+    })
+
+    if (!order) {
+      throw new NotFoundError('Order not found')
+    }
+
+    // Only allow users to update their own order, or admins to update any order
+    if (order.userId !== user.id && user.role !== 'ADMIN') {
+      throw new NotFoundError('Order not found')
+    }
+
+    // If cancelling, restore stock
+    if (data.status === 'CANCELLED' && order.status !== 'CANCELLED') {
+      await prisma.$transaction(async (tx) => {
+        for (const item of order.orderItems) {
+          await tx.product.update({
+            where: { id: item.productId },
+            data: { stock: { increment: item.quantity } }
+          })
+        }
+        await tx.order.update({
+          where: { id },
+          data: { status: 'CANCELLED' }
+        })
+      })
+      return NextResponse.json({ success: true, status: 'CANCELLED' })
+    }
+
+    const updated = await prisma.order.update({
+      where: { id },
+      data: {
+        ...(data.status && { status: data.status }),
+        ...(data.paymentStatus && { paymentStatus: data.paymentStatus }),
+        ...(data.trackingNumber !== undefined && { trackingNumber: data.trackingNumber }),
+        ...(data.trackingProvider !== undefined && { trackingProvider: data.trackingProvider }),
+        ...(data.shippingAddress && { shippingAddress: data.shippingAddress }),
+      },
     })
     return NextResponse.json(updated)
   } catch (error) {

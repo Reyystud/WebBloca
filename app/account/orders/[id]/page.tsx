@@ -115,6 +115,25 @@ export default function OrderDetailPage() {
     }
   }
 
+  const handleCancelOrder = async () => {
+    if (!order) return
+    if (!confirm('Are you sure you want to cancel this order?')) return
+
+    try {
+      const res = await fetch(`/api/orders/${order.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'CANCELLED' })
+      })
+
+      if (res.ok) {
+        setOrder({ ...order, status: 'CANCELLED' })
+      }
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -314,6 +333,17 @@ export default function OrderDetailPage() {
                     {order.paymentStatus === 'EXPIRED' ? 'Pay Again' : 'Pay Now'}
                   </Button>
                 </>
+              )}
+
+              {order.status === 'PENDING' && (
+                <div className="pt-2">
+                  <button
+                    onClick={handleCancelOrder}
+                    className="w-full py-2.5 text-sm font-medium text-red-600 hover:text-red-700 border border-red-200 rounded-lg hover:bg-red-50 transition-colors"
+                  >
+                    Cancel Order
+                  </button>
+                </div>
               )}
             </div>
           </div>

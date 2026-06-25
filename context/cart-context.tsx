@@ -1,6 +1,7 @@
 'use client'
 
 import React, { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react'
+import { useAuth } from './auth-context'
 
 export interface CartItem {
   id: string
@@ -44,6 +45,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const [isOpen, setIsOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const syncRef = useRef(false)
+  const { user } = useAuth()
 
   useEffect(() => {
     const stored = getStoredCart()
@@ -59,11 +61,14 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (isLoading) return
+    
+    // We want to run mergeCart once per user session
+    // so we use a ref tied to the user's ID (or 'guest')
+    const currentSessionId = user?.id || 'guest'
+    if (syncRef.current === currentSessionId) return
+    syncRef.current = currentSessionId as any
 
     const mergeCart = async () => {
-      if (syncRef.current) return
-      syncRef.current = true
-
       try {
         const res = await fetch('/api/auth', { method: 'POST' })
         if (!res.ok) return
@@ -74,7 +79,18 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           if (cartRes.ok) {
             const dbCart = await cartRes.json()
             if (Array.isArray(dbCart) && dbCart.length > 0) {
-              setItems(dbCart)
+              setItems((prev) => {
+                const combined = [...prev]
+                dbCart.forEach((item: CartItem) => {
+                  const existing = combined.find(i => i.id === item.id)
+                  if (existing) {
+                    existing.quantity = Math.max(existing.quantity, item.quantity)
+                  } else {
+                    combined.push(item)
+                  }
+                })
+                return combined
+              })
             }
           }
           return
@@ -89,7 +105,18 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         if (mergeRes.ok) {
           const mergedCart = await mergeRes.json()
           if (Array.isArray(mergedCart)) {
-            setItems(mergedCart)
+            setItems((prev) => {
+              const combined = [...prev]
+              mergedCart.forEach((item: CartItem) => {
+                const existing = combined.find(i => i.id === item.id)
+                if (existing) {
+                  existing.quantity = Math.max(existing.quantity, item.quantity)
+                } else {
+                  combined.push(item)
+                }
+              })
+              return combined
+            })
           }
         }
       } catch {
@@ -97,9 +124,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       }
     }
 
-    // Check if user is logged in by trying auth endpoint
     mergeCart()
-  }, [isLoading])
+  }, [isLoading, user])
 
   const syncToDb = useCallback(async (newItems: CartItem[]) => {
     try {
@@ -124,6 +150,12 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       // Silent fail - localStorage is the fallback
     }
   }, [])
+
+  useEffect(() => {
+    if (user && !isLoading && items.length > 0) {
+      syncToDb(items)
+    }
+  }, [user, isLoading]) // intentionally not including items or syncToDb to only trigger on user change/load
 
   const addItem = useCallback((item: Omit<CartItem, 'quantity'>) => {
     setItems((prevItems) => {

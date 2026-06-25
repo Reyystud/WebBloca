@@ -54,6 +54,10 @@ export const shippingAddressSchema = z.object({
 })
 
 export const createOrderSchema = z.object({
+  items: z.array(z.object({
+    id: z.string(),
+    quantity: z.number().int().positive(),
+  })),
   shippingAddress: shippingAddressSchema,
   shippingMethod: z.string().optional(),
   shippingCost: z.number().min(0).optional().default(0),

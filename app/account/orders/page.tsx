@@ -67,6 +67,26 @@ export default function OrdersPage() {
     )
   }
 
+  const handleCancelOrder = async (e: React.MouseEvent, orderId: string) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (!confirm('Are you sure you want to cancel this order?')) return
+
+    try {
+      const res = await fetch(`/api/orders/${orderId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'CANCELLED' })
+      })
+
+      if (res.ok) {
+        setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: 'CANCELLED' } : o))
+      }
+    } catch {
+      // handle error
+    }
+  }
+
   return (
     <div className="space-y-6">
       <p className="text-gray-600">
@@ -87,71 +107,84 @@ export default function OrdersPage() {
       ) : (
         <div className="space-y-4">
           {orders.map((order) => (
-            <Link
-              key={order.id}
-              href={`/account/orders/${order.id}`}
-              className="block border border-gray-200 rounded-lg p-6 hover:bg-gray-50 transition-colors"
-            >
-              <div className="flex flex-col md:flex-row gap-6">
-                <div className="flex-1">
-                  <div className="flex flex-col md:flex-row md:items-start md:justify-between mb-4">
-                    <div>
-                      <h3 className="font-bold text-lg mb-2">
-                        Order #{order.id.slice(-8).toUpperCase()}
-                      </h3>
-                      <div className="flex flex-wrap gap-4 text-sm text-gray-600">
-                        <div className="flex items-center gap-2">
-                          <Calendar size={16} />
-                          <span>{new Date(order.createdAt).toLocaleDateString()}</span>
+            <div key={order.id} className="border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors relative">
+              <Link
+                href={`/account/orders/${order.id}`}
+                className="block p-6"
+              >
+                <div className="flex flex-col md:flex-row gap-6">
+                  <div className="flex-1">
+                    <div className="flex flex-col md:flex-row md:items-start md:justify-between mb-4">
+                      <div>
+                        <h3 className="font-bold text-lg mb-2">
+                          Order #{order.id.slice(-8).toUpperCase()}
+                        </h3>
+                        <div className="flex flex-wrap gap-4 text-sm text-gray-600">
+                          <div className="flex items-center gap-2">
+                            <Calendar size={16} />
+                            <span>{new Date(order.createdAt).toLocaleDateString()}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Package size={16} />
+                            <span>
+                              {order.orderItems.reduce((sum, item) => sum + item.quantity, 0)} items
+                            </span>
+                          </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <Package size={16} />
-                          <span>
-                            {order.orderItems.reduce((sum, item) => sum + item.quantity, 0)} items
-                          </span>
-                        </div>
+                      </div>
+
+                      <div className="flex gap-2 mt-2 md:mt-0">
+                        <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${statusColors[order.status] || 'bg-gray-50 text-gray-700 border-gray-200'}`}>
+                          {order.status}
+                        </span>
+                        <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${paymentStatusColors[order.paymentStatus] || 'bg-gray-50 text-gray-600 border-gray-200'}`}>
+                          <CreditCard size={12} className="inline mr-1" />
+                          {order.paymentStatus}
+                        </span>
                       </div>
                     </div>
 
-                    <div className="flex gap-2 mt-2 md:mt-0">
-                      <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${statusColors[order.status] || 'bg-gray-50 text-gray-700 border-gray-200'}`}>
-                        {order.status}
-                      </span>
-                      <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${paymentStatusColors[order.paymentStatus] || 'bg-gray-50 text-gray-600 border-gray-200'}`}>
-                        <CreditCard size={12} className="inline mr-1" />
-                        {order.paymentStatus}
-                      </span>
-                    </div>
-                  </div>
+                    <div className="flex flex-col md:flex-row md:items-center md:justify-between">
+                      <div className="flex items-center gap-2 mb-4 md:mb-0">
+                        <DollarSign size={18} className="text-gray-600" />
+                        <span className="text-lg font-bold">{formatPrice(order.totalAmount)}</span>
+                      </div>
 
-                  <div className="flex flex-col md:flex-row md:items-center md:justify-between">
-                    <div className="flex items-center gap-2 mb-4 md:mb-0">
-                      <DollarSign size={18} className="text-gray-600" />
-                      <span className="text-lg font-bold">{formatPrice(order.totalAmount)}</span>
-                    </div>
-
-                    <div className="flex gap-3">
-                      {order.orderItems.slice(0, 3).map((item) => (
-                        <div key={item.id} className="w-12 h-12 bg-gray-100 rounded overflow-hidden">
-                          {item.productImage && (
-                            <img
-                              src={item.productImage.startsWith('/') ? item.productImage : `/${item.productImage}`}
-                              alt={item.productName}
-                              className="w-full h-full object-cover"
-                            />
-                          )}
-                        </div>
-                      ))}
-                      {order.orderItems.length > 3 && (
-                        <div className="w-12 h-12 bg-gray-100 rounded flex items-center justify-center text-xs text-gray-500">
-                          +{order.orderItems.length - 3}
-                        </div>
-                      )}
+                      <div className="flex gap-3">
+                        {order.orderItems.slice(0, 3).map((item) => (
+                          <div key={item.id} className="w-12 h-12 bg-gray-100 rounded overflow-hidden">
+                            {item.productImage && (
+                              <img
+                                src={item.productImage.startsWith('/') ? item.productImage : `/${item.productImage}`}
+                                alt={item.productName}
+                                className="w-full h-full object-cover"
+                              />
+                            )}
+                          </div>
+                        ))}
+                        {order.orderItems.length > 3 && (
+                          <div className="w-12 h-12 bg-gray-100 rounded flex items-center justify-center text-xs text-gray-500">
+                            +{order.orderItems.length - 3}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            </Link>
+              </Link>
+              
+              {/* Actions */}
+              {order.status === 'PENDING' && (
+                <div className="px-6 pb-6 pt-0 flex justify-end">
+                  <button
+                    onClick={(e) => handleCancelOrder(e, order.id)}
+                    className="text-sm text-red-600 hover:text-red-700 font-medium px-4 py-2 border border-red-200 hover:bg-red-50 rounded-lg transition-colors"
+                  >
+                    Cancel Order
+                  </button>
+                </div>
+              )}
+            </div>
           ))}
         </div>
       )}

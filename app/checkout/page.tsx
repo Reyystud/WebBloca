@@ -21,7 +21,7 @@ interface ShippingOption {
 
 export default function CheckoutPage() {
   const { user, profile, loading: authLoading } = useAuth()
-  const { items, getTotalPrice, getItemCount, clearCart } = useCart()
+  const { items, isLoading: cartLoading, getTotalPrice, getItemCount, clearCart } = useCart()
   const router = useRouter()
 
   const [step, setStep] = useState<'address' | 'shipping' | 'review'>('address')
@@ -57,12 +57,6 @@ export default function CheckoutPage() {
       }))
     }
   }, [profile])
-
-  useEffect(() => {
-    if (items.length === 0 && !submitting) {
-      router.push('/shop')
-    }
-  }, [items.length, submitting, router])
 
   const subtotal = getTotalPrice()
 
@@ -123,6 +117,7 @@ export default function CheckoutPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          items: items.map(item => ({ id: item.id, quantity: item.quantity })),
           shippingAddress: form,
           shippingMethod: `${selectedShipping.courier} ${selectedShipping.service}`,
           shippingCost: selectedShipping.price,
@@ -143,7 +138,7 @@ export default function CheckoutPage() {
     }
   }
 
-  if (authLoading) {
+  if (authLoading || cartLoading) {
     return (
       <div className="min-h-screen bg-white pt-24 pb-12 flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
@@ -151,7 +146,7 @@ export default function CheckoutPage() {
     )
   }
 
-  if (!user || items.length === 0) {
+  if (!user) {
     return null
   }
 
