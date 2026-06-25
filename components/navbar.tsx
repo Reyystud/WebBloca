@@ -291,7 +291,7 @@ export default function Navbar() {
       {/* Results Overlay */}
       <div
         className={cn(
-          "absolute inset-x-0 top-full bg-white z-0 transition-all duration-300 overflow-hidden shadow-2xl border-t border-gray-100",
+          "absolute inset-x-0 top-full bg-white dark:bg-[#0f0f0f] z-0 transition-all duration-300 overflow-hidden shadow-2xl border-t border-gray-100 dark:border-gray-800",
           isOverlayOpen && isSearchActive && searchQuery.trim() ? "max-h-[600px] opacity-100" : "max-h-0 opacity-0"
         )}
         onMouseEnter={() => setIsOverlayOpen(true)}
@@ -308,7 +308,7 @@ export default function Navbar() {
                     onClick={closeSearch}
                     className="flex items-center gap-4 group"
                   >
-                    <div className="w-16 h-16 bg-gray-50 rounded overflow-hidden shrink-0">
+                    <div className="w-16 h-16 bg-gray-50 dark:bg-[#1a1a1a] rounded overflow-hidden shrink-0">
                       <img
                         src={`/${product.image}`}
                         alt={product.name}
@@ -316,7 +316,7 @@ export default function Navbar() {
                       />
                     </div>
                     <div className="flex flex-col">
-                      <span className="text-xs font-bold tracking-wider uppercase group-hover:text-gray-500 transition-colors">
+                      <span className="text-xs font-bold tracking-wider uppercase group-hover:text-gray-500 dark:text-white transition-colors">
                         {product.name}
                       </span>
                       <span className="text-[10px] text-gray-400 uppercase tracking-widest">
@@ -332,7 +332,7 @@ export default function Navbar() {
             <Link
               href={`/shop?search=${encodeURIComponent(searchQuery)}`}
               onClick={closeSearch}
-              className="text-[10px] font-bold tracking-[0.2em] uppercase border-b border-black w-fit pb-1 hover:opacity-60 transition-opacity"
+              className="text-[10px] font-bold tracking-[0.2em] uppercase border-b border-black dark:border-white dark:text-white w-fit pb-1 hover:opacity-60 transition-opacity"
             >
               View all results
             </Link>
@@ -346,7 +346,7 @@ export default function Navbar() {
                   key={cat.name}
                   href={cat.href}
                   onClick={closeSearch}
-                  className="text-xs font-bold tracking-[0.1em] hover:text-gray-500 transition-colors uppercase"
+                  className="text-xs font-bold tracking-[0.1em] hover:text-gray-500 dark:text-white dark:hover:text-gray-300 transition-colors uppercase"
                 >
                   {cat.name}
                 </Link>
