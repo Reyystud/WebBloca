@@ -11,7 +11,7 @@ export default function Home() {
   }))
 
   return (
-    <main className="bg-white">
+    <main className="bg-white overflow-x-hidden w-full">
       <HeroSection />
       <ProductCarousel title="Trending Now" products={featuredProducts} />
       <BrandStory />
