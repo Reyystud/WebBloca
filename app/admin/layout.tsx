@@ -13,12 +13,14 @@ import {
   Menu,
   X,
   ChevronLeft,
+  Plus,
 } from 'lucide-react'
 import { useState } from 'react'
 
 const navItems = [
   { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/admin/products', label: 'Products', icon: Package },
+  { href: '/admin/products/new', label: 'Add Product', icon: Plus },
   { href: '/admin/orders', label: 'Orders', icon: ShoppingBag },
   { href: '/admin/users', label: 'Users', icon: Users },
   { href: '/admin/settings', label: 'Settings', icon: Settings },

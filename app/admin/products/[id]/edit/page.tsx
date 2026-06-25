@@ -5,12 +5,12 @@ import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Upload } from 'lucide-react'
 
-const CATEGORIES = ['Bracelet', 'Phone strap', 'Bag charm', 'Keychain']
+const CATEGORIES = ['Bracelet', 'Bag charm', 'Handstrap', 'Lanyard']
 const SUB_CATEGORIES: Record<string, string[]> = {
-  'Bracelet': ['Bon Claire', 'Bub', 'Wicky'],
-  'Phone strap': ['Buggle', 'Basic'],
-  'Bag charm': ['Ballet', 'Sparkle'],
-  'Keychain': ['Silver', 'Beaded'],
+  'Bracelet': ['Bon', 'Bub', 'Wicky', 'Piyo', 'Bilo'],
+  'Bag charm': ['Ballet', 'Sparkle', 'Tumble', 'Rear'],
+  'Handstrap': ['Pay', 'Vast', 'Loom', 'Lite Series'],
+  'Lanyard': ['Solitaire', 'Wiki', 'Nibble'],
 }
 
 interface Product {
@@ -173,7 +173,9 @@ export default function EditProductPage() {
               value={form.category}
               onChange={(e) => setForm({ ...form, category: e.target.value, subCategory: '' })}
               className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:border-black transition-colors"
+              required
             >
+              <option value="" disabled>Select Category</option>
               {CATEGORIES.map((cat) => (
                 <option key={cat} value={cat}>{cat}</option>
               ))}
@@ -184,9 +186,10 @@ export default function EditProductPage() {
             <select
               value={form.subCategory}
               onChange={(e) => setForm({ ...form, subCategory: e.target.value })}
-              className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:border-black transition-colors"
+              className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:border-black transition-colors disabled:opacity-50 disabled:bg-gray-50"
+              disabled={!form.category}
             >
-              <option value="">None</option>
+              <option value="">{form.category ? 'None / Select Sub Category' : 'Select Category First'}</option>
               {(SUB_CATEGORIES[form.category] || []).map((sub) => (
                 <option key={sub} value={sub}>{sub}</option>
               ))}

@@ -177,8 +177,12 @@ export default function AdminProductsPage() {
           </table>
         </div>
         {filtered.length === 0 && (
-          <div className="text-center py-12 text-gray-400">
-            No products found
+          <div className="text-center py-16 text-gray-400 flex flex-col items-center">
+            <p className="mb-4">No products found</p>
+            <Link href="/admin/products/new" className="bg-black text-white px-6 py-2 rounded-lg hover:bg-gray-800 transition-colors inline-flex items-center gap-2">
+              <Plus size={18} />
+              Add First Product
+            </Link>
           </div>
         )}
       </div>
