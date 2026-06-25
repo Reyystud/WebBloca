@@ -67,11 +67,12 @@ export default function ShippingTrackingPage() {
         <div className="lg:col-span-2">
           {/* Order Progress */}
           <div className="bg-white border border-gray-200 rounded-lg p-6 lg:p-10 shadow-sm">
-            <div className="relative flex justify-between items-center mb-16">
-              <div className="absolute left-0 top-1/2 w-full h-1 bg-gray-100 -z-0 -translate-y-1/2 rounded-full"></div>
+            {/* Desktop Horizontal Progress */}
+            <div className="hidden md:flex relative justify-between items-center mb-16 px-4">
+              <div className="absolute left-8 right-8 top-1/2 h-1 bg-gray-100 -z-0 -translate-y-1/2 rounded-full"></div>
               <div 
-                className="absolute left-0 top-1/2 h-1 bg-black -z-0 -translate-y-1/2 transition-all duration-700 ease-in-out rounded-full" 
-                style={{ width: `${(Math.max(0, statusToVisualIdx(order.status)) / 2) * 100}%` }}
+                className="absolute left-8 top-1/2 h-1 bg-black -z-0 -translate-y-1/2 transition-all duration-700 ease-in-out rounded-full" 
+                style={{ width: `calc(${(Math.max(0, statusToVisualIdx(order.status)) / 2) * 100}% - 4rem)` }}
               ></div>
               
               {visualSteps.map((step, i) => (
@@ -82,6 +83,30 @@ export default function ShippingTrackingPage() {
                     {i < statusToVisualIdx(order.status) ? '✓' : i + 1}
                   </div>
                   <p className={`text-[10px] uppercase font-black tracking-widest mt-4 absolute -bottom-8 whitespace-nowrap transition-colors duration-500 ${
+                    i <= statusToVisualIdx(order.status) ? 'text-black' : 'text-gray-400'
+                  }`}>
+                    {step}
+                  </p>
+                </div>
+              ))}
+            </div>
+
+            {/* Mobile Vertical Progress */}
+            <div className="md:hidden relative flex flex-col justify-between mb-8 pl-2 space-y-10">
+              <div className="absolute left-[1.6rem] top-6 bottom-6 w-1 bg-gray-100 -z-0 rounded-full"></div>
+              <div 
+                className="absolute left-[1.6rem] top-6 w-1 bg-black -z-0 transition-all duration-700 ease-in-out rounded-full" 
+                style={{ height: `calc(${(Math.max(0, statusToVisualIdx(order.status)) / 2) * 100}% - 3rem)` }}
+              ></div>
+              
+              {visualSteps.map((step, i) => (
+                <div key={step} className="flex items-center relative z-10 gap-4">
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold border-4 border-white transition-colors duration-500 shrink-0 ${
+                    i <= statusToVisualIdx(order.status) ? 'bg-black text-white shadow-md' : 'bg-gray-100 text-gray-400'
+                  }`}>
+                    {i < statusToVisualIdx(order.status) ? '✓' : i + 1}
+                  </div>
+                  <p className={`text-xs uppercase font-black tracking-widest transition-colors duration-500 ${
                     i <= statusToVisualIdx(order.status) ? 'text-black' : 'text-gray-400'
                   }`}>
                     {step}

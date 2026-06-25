@@ -68,12 +68,8 @@ export default function BrandStory() {
             <div
               key={i}
               className={`relative bg-gray-50 overflow-hidden group ${
-                i === 0 || i === 5 ? 'md:row-span-2' : ''
+                i === 0 || i === 5 ? 'col-span-2 md:col-span-1 md:row-span-2 aspect-[2/1] md:aspect-auto h-64 md:h-[600px]' : 'aspect-square h-48 md:h-[300px]'
               }`}
-              style={{
-                aspectRatio: i === 0 || i === 5 ? 'auto' : '1',
-                minHeight: i === 0 || i === 5 ? '500px' : '300px',
-              }}
             >
               <img 
                 src={src} 
