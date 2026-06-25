@@ -4,7 +4,7 @@ import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import ProductCard from '@/components/product-card'
 import { ChevronRight } from 'lucide-react'
-import { ALL_PRODUCTS } from '@/lib/products'
+import { getProducts, type Product, ALL_PRODUCTS } from '@/lib/products'
 import { useTheme } from '@/context/theme-context'
 
 const BLOCA_CATEGORIES = [
@@ -39,6 +39,7 @@ const SUB_CATEGORIES: Record<string, string[]> = {
 
 function ShopContent() {
   const searchParams = useSearchParams()
+  const [allProducts, setAllProducts] = useState<Product[]>(ALL_PRODUCTS)
   const [selectedCategory, setSelectedCategory] = useState('All item')
   const [selectedSubCategory, setSelectedSubCategory] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState<string | null>(null)
@@ -109,14 +110,33 @@ function ShopContent() {
 
   const currentCategories = brand === 'BLOCA' ? BLOCA_CATEGORIES : BLOCA_HOMME_CATEGORIES
 
-  const filteredProducts = ALL_PRODUCTS.filter(product => {
+  useEffect(() => {
+    getProducts().then(fetchedProducts => {
+      // If DB returned empty (and we want to fallback to local), or if we want to show DB products:
+      if (fetchedProducts.length > 0) {
+        setAllProducts(fetchedProducts)
+      }
+    })
+  }, [])
+
+  const filteredProducts = allProducts.filter(product => {
     // Hide custom category from shopping page entirely
     if (product.category.toLowerCase() === 'custom') {
       return false
     }
 
+    // Since DB products don't have a brand field, we try to deduce it or default to BLOCA
+    let productBrand = product.brand
+    if (!productBrand) {
+      if (product.name.toLowerCase().includes('homme')) {
+        productBrand = 'BLOCA HOMME'
+      } else {
+        productBrand = 'BLOCA'
+      }
+    }
+
     // Filter by brand first unless there's a global search
-    if (!searchQuery && product.brand !== brand) {
+    if (!searchQuery && productBrand !== brand) {
       return false
     }
 
