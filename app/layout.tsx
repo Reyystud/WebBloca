@@ -16,8 +16,9 @@ export const metadata: Metadata = {
   title: 'BLOCA - Handcrafted Bracelets',
   description: 'Premium, handmade bracelets crafted with care. Sustainable, artisan-made jewelry from Indonesia.',
   icons: {
-    icon: '/logobloca.jpeg',
-    apple: '/logobloca.jpeg',
+    icon: '/bloca-logo.webp',
+    shortcut: '/bloca-logo.webp',
+    apple: '/bloca-logo.webp',
   },
 }
 

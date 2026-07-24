@@ -130,12 +130,19 @@ export default function Navbar() {
           <Link
             href="/"
             className={cn(
-              "text-2xl font-black tracking-tighter hover:opacity-75 transition-all duration-300",
+              "flex items-center hover:opacity-75 transition-all duration-300",
               isSearchActive ? "opacity-0 invisible w-0" : "opacity-100 visible"
             )}
             onClick={closeSearch}
           >
-            BLOCA.
+            <img
+              src="/Bloca-removebg-preview.webp"
+              alt="BLOCA Logo"
+              className={cn(
+                "w-auto object-contain dark:invert transition-all duration-300 py-1",
+                isScrolled ? "h-10 sm:h-12" : "h-14 sm:h-16 md:h-18 max-h-[85%]"
+              )}
+            />
           </Link>
         </div>
 
