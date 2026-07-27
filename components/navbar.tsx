@@ -139,7 +139,7 @@ export default function Navbar() {
               src="/Bloca-removebg-preview.webp"
               alt="BLOCA Logo"
               className={cn(
-                "w-auto object-contain dark:invert transition-all duration-300 py-1",
+                "w-auto object-contain transition-all duration-300 py-1",
                 isScrolled ? "h-10 sm:h-12" : "h-14 sm:h-16 md:h-18 max-h-[85%]"
               )}
             />
