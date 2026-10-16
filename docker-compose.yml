@@ -1,0 +1,26 @@
+services:
+  app:
+    build:
+      context: .
+      target: runner
+      args:
+        NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL}
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY}
+    ports:
+      - "3000:3000"
+    env_file: .env
+    restart: unless-stopped
+
+  app-dev:
+    profiles: ["dev"]
+    build:
+      context: .
+      target: dev
+    ports:
+      - "3000:3000"
+    env_file: .env
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/.next
+    command: sh -c "npx prisma generate && npm run dev -- -H 0.0.0.0"
