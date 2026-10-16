@@ -103,6 +103,46 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
+## Running with Docker
+
+Requires Docker and Docker Compose. The database stays on Supabase (remote), so complete steps 2–5 above first.
+
+### 1. Configure Environment
+
+```bash
+cp .env.example .env
+```
+
+Fill in `.env` with your Supabase credentials and `DATABASE_URL` / `DIRECT_URL`.
+
+### 2. Production
+
+```bash
+docker compose up --build        # run in foreground
+docker compose up --build -d     # run in background
+docker compose logs -f app       # view logs
+docker compose down              # stop
+```
+
+Open [http://localhost:3000](http://localhost:3000).
+
+> `NEXT_PUBLIC_*` variables are baked in at build time. If you change them, re-run with `--build`.
+
+### 3. Development (hot reload)
+
+```bash
+docker compose --profile dev up --build app-dev
+```
+
+### 4. Database Commands
+
+The production image does not include Prisma CLI tooling. Run database commands through the dev service:
+
+```bash
+docker compose --profile dev run --rm app-dev npm run db:push
+docker compose --profile dev run --rm app-dev npm run db:seed
+```
+
 ## Project Structure
 
 ```
