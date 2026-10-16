@@ -143,6 +143,13 @@ docker compose --profile dev run --rm app-dev npm run db:push
 docker compose --profile dev run --rm app-dev npm run db:seed
 ```
 
+## Backend & Infrastructure Docs
+
+- [INFRASTRUCTURE.md](INFRASTRUCTURE.md) — arsitektur server, load balancer, database, Redis, object storage
+- [BACKEND.md](BACKEND.md) — race condition stok, alur checkout, penanganan pembayaran gagal
+- [SUPABASE_MIGRATION.md](SUPABASE_MIGRATION.md) — langkah keluar dari Supabase
+- [OPERATIONS.md](OPERATIONS.md) — load test, checklist hari restock, monitoring, runbook
+
 ## Project Structure
 
 ```
